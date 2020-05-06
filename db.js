@@ -38,13 +38,15 @@ var save = async function(data) {
       ","
     )}) values(${valores.join(",")});`;
     if (id > 0) {
-      sql = `update ${data.tabla} set ${camposValores};`;
+      sql = `update ${data.tabla} set ${camposValores} where id=${id};`;
     }
     console.log(sql);
     con.query(sql, (err, rows) => {
       if (err) {
+        //console.log(err);
         resolve(err);
       } else {
+        //console.log(rows);
         resolve(rows);
       }
     });

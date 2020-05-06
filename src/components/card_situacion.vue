@@ -2,7 +2,7 @@
   <div>
     <v-card width="420" class="ma-1">
       <v-card-title
-        v-text="situacion.text"
+        v-text="situación.text"
         class="blue-grey lighten-5 pt-1 pb-1 text-lowercase"
         v-model="buscar"
       ></v-card-title>
@@ -18,18 +18,42 @@
           </thead>
           <tbody>
             <tr v-for="pago in this.$store.state.tipos_pago" :key="pago.value">
-              <th>{{pago.text}}:</th>
+              <th>{{ pago.text }}:</th>
               <td
-                @dblclick="selected.id_pago=pago.value;selected.mov='id_cuenta_debe';dlg=true"
+                @dblclick="
+                  selected.id = showLink(pago.value, 0).value;
+                  selected.id_pago = pago.value;
+                  selected.mov = 'id_cuenta_debe';
+                  dlg = true;
+                "
                 class="clickeable"
               >
-                <span>{{showLink(pago.value,0)}}</span>
+                <v-tooltip top>
+                  <template v-slot:activator="{ on }">
+                    <span
+                      v-on="on"
+                    >{{ value2text('id',showLink(pago.value, 0).text,'catálogo').cuenta }}</span>
+                  </template>
+                  <span>{{ value2text('id',showLink(pago.value, 0).text,'catálogo').descripción }}</span>
+                </v-tooltip>
               </td>
               <td
-                @dblclick="selected.id_pago=pago.value;selected.mov='id_cuenta_haber';dlg=true"
+                @dblclick="
+                  selected.id = showLink(pago.value, 0).value;
+                  selected.id_pago = pago.value;
+                  selected.mov = 'id_cuenta_haber';
+                  dlg = true;
+                "
                 class="clickeable"
               >
-                <span>{{showLink(pago.value,1)}}</span>
+                <v-tooltip top>
+                  <template v-slot:activator="{ on }">
+                    <span
+                      v-on="on"
+                    >{{ value2text('id',showLink(pago.value, 1).text,'catálogo').cuenta }}</span>
+                  </template>
+                  <span>{{ value2text('id',showLink(pago.value, 1).text,'catálogo').descripción }}</span>
+                </v-tooltip>
               </td>
             </tr>
           </tbody>
@@ -62,11 +86,11 @@
               <tr
                 v-for="cta in cuentasDetalle"
                 :key="cta.value"
-                @click="selected[selected.mov]=cta.value"
-                :class="selected[selected.mov]==cta.value?'selected':''"
+                @click="selected.cuenta = cta.value"
+                :class="selected.cuenta == cta.value ? 'selected' : ''"
               >
-                <td>{{ cta.text.split( ' - ' )[0] }}</td>
-                <td>{{ cta.text.split( ' - ' )[1] }}</td>
+                <td>{{ cta.text.split(" - ")[0] }}</td>
+                <td>{{ cta.text.split(" - ")[1] }}</td>
               </tr>
             </tbody>
           </v-simple-table>
@@ -87,14 +111,14 @@ export default {
   name: "card-situación",
   props: {
     sector: Number,
-    situacion: Object,
+    situación: Object,
     clasificación: Number
   },
   data() {
     return {
       dlg: false,
       buscar: "",
-      selected: { id_pago: 0, id_cuenta_debe: 0, id_cuenta_haber: 0 }
+      selected: { id: 0, id_pago: 0, mov: "", cuenta: "" }
     };
   },
   methods: {
@@ -104,13 +128,12 @@ export default {
       var data = {
         tabla: "cont_integracion",
         data: {
-          id: 0,
+          id: mv.selected.id ? mv.selected.id : 0,
           clasificación: mv.clasificación,
-          id_situación: mv.situacion.id,
+          id_situación: mv.situación.value,
           id_sector: mv.sector,
           id_pago: mv.selected.id_pago,
-          id_cuenta_debe: mv.selected.id_cuenta_debe,
-          id_cuenta_haber: mv.selected.id_cuenta_haber
+          [mv.selected.mov]: mv.selected.cuenta
         }
       };
 
@@ -126,6 +149,10 @@ export default {
         })
         .then(r => {
           console.log(r);
+          mv.$store.dispatch("getData", {
+            tabla: "cont_integracion",
+            variable: "enlaces"
+          });
           mv.$store.commit("setCargando", false);
           mv.dlg = false;
         });
@@ -138,17 +165,29 @@ export default {
           l.clasificación == mv.clasificación &&
           l.id_pago == idPago &&
           l.id_sector == mv.sector &&
-          l.id_situación == mv.situacion.id
+          l.id_situación == mv.situación.value
         );
       });
       if (result.length > 0) {
+        result = result[0];
         if (mov == 0) {
-          return result.id_cuenta_debe;
+          return { value: result.id, text: result.id_cuenta_debe };
         } else {
-          return result.id_cuenta_haber;
+          return { value: result.id, text: result.id_cuenta_haber };
         }
       } else {
+        return { id: 0, text: "" };
+      }
+    },
+    value2text: function(keyBuscada, valor, variable) {
+      var mv = this;
+      var result = mv.$store.state[variable].filter(f => {
+        return f[keyBuscada] === valor;
+      });
+      if (result.length === 0) {
         return "";
+      } else {
+        return result[0];
       }
     }
   },

@@ -29,28 +29,41 @@ export default new Vuex.Store({
     },
   },
   actions: {
-    getData: function({ commit, state }) {
+    getData: function({ commit, state }, payload) {
       commit("setCargando", true);
-      state.data.forEach((d) => {
-        const url = `${state.api}/getData`;
-        console.log(url);
+      const url = `${state.api}/getData`;
+      if (payload) {
         fetch(url, {
           method: "post",
-          body: JSON.stringify(d),
-          headers: {
-            "Content-Type": "application/json",
-          },
+          body: JSON.stringify(payload),
+          headers: { "content-Type": "application/json" },
         })
           .then((r) => {
             return r.json();
           })
           .then((res) => {
-            //console.log(res);
             commit("setCargando", false);
-            commit("setVariable", { variable: d.variable, data: res });
+            commit("setVariable", { variable: payload.variable, data: res });
           });
-      });
+      } else {
+        state.data.forEach((d) => {
+          fetch(url, {
+            method: "post",
+            body: JSON.stringify(d),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+            .then((r) => {
+              return r.json();
+            })
+            .then((res) => {
+              //console.log(res);
+              commit("setCargando", false);
+              commit("setVariable", { variable: d.variable, data: res });
+            });
+        });
+      }
     },
   },
-  modules: {},
 });

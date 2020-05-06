@@ -28,8 +28,8 @@
             <v-layout row>
               <card-situacion
                 v-for="sit in $store.state.situaciones"
-                :situacion="sit"
-                :clasificacion="tb"
+                :situación="sit"
+                :clasificación="tb.value"
                 :sector="enlaceActual.id_sector"
                 :key="sit.text"
               ></card-situacion>

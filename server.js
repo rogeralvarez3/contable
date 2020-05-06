@@ -18,7 +18,6 @@ app.post("/getData", (req, res) => {
 });
 app.post("/save", (req, res) => {
   var data = req.body;
-  console.log(data);
   db.save(data).then((r) => {
     res.send(r);
   });
