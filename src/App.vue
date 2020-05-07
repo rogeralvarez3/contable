@@ -27,8 +27,10 @@
     <v-dialog v-model="cargando" persistent width="200">
       <v-card>
         <v-card-text>
-          <v-card-title>ESPERE...</v-card-title>
-          <v-icon>mdi-spin mdi-star</v-icon>
+          <v-layout row class="pt-2">
+            <h1 class="mt-2">ESPERE...</h1>
+            <v-icon large color="primary">mdi-spin mdi-movie-roll</v-icon>
+          </v-layout>
         </v-card-text>
       </v-card>
     </v-dialog>

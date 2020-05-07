@@ -40,7 +40,7 @@ var save = async function(data) {
     if (id > 0) {
       sql = `update ${data.tabla} set ${camposValores} where id=${id};`;
     }
-    console.log(sql);
+    //console.log(sql);
     con.query(sql, (err, rows) => {
       if (err) {
         //console.log(err);
