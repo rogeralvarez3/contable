@@ -1,7 +1,7 @@
 const mysql = require("mysql");
 
 const con = mysql.createConnection({
-  host: "192.168.1.66",
+  host: "coopefacsa.coop",
   port: 3312,
   user: "root",
   password: "root@",

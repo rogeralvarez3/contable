@@ -13,12 +13,15 @@ export default new Vuex.Store({
       { tabla: "csector", variable: "sectores" },
       { tabla: "cont_integracion", variable: "enlaces" },
       { tabla: "ctipos_pago", variable: "tipos_pago" },
+      { tabla: "fsucursal", variable: "sucursales" },
     ],
+    sucurales: [],
     catálogo: [],
     situaciones: [],
     sectores: [],
     enlaces: [],
     tipos_pago: [],
+    comprobanteActual: { id: 0, fecha: "", detalle: [] },
   },
   mutations: {
     setVariable(state, payload) {
@@ -64,6 +67,27 @@ export default new Vuex.Store({
             });
         });
       }
+    },
+  },
+  getters: {
+    cuentasDetalle: (state) => (text) => {
+      var result = [];
+      if (text.trim().length > 0) {
+        result = state.catálogo.filter((cta) => {
+          return (
+            cta.tipo == 2 &&
+            (cta.cuenta + cta.descripción)
+              .toLowerCase()
+              .indexOf(text.toLowerCase()) >= 0
+          );
+        });
+      } else {
+        result = state.catálogo.filter((cta) => {
+          return cta.tipo == 2;
+        });
+      }
+      result=result.slice(0,11)
+      return result;
     },
   },
 });
