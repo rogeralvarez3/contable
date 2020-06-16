@@ -20,8 +20,25 @@
         </v-btn>
       </v-card-title>
       <v-divider></v-divider>
-      <v-card-text>
-        <v-data-table dense :items-per-page="rows" :items="catálogo" :headers="columnas"></v-data-table>
+      <v-card-text>     
+        <v-simple-table dense>
+          <thead>
+            <tr>
+              <th v-text="'cuenta'" />
+              <th v-text="'descripción'" />
+              <th v-text="'nivel'" />
+              <th v-text="'tipo'" />
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(cta,i) in catálogo" :key="i">
+              <td>{{cta.cuenta}}</td>
+              <td>{{cta.descripción}}</td>
+              <td>{{cta.nivel}}</td>
+              <td>{{cta.tipo==1?'Resumen':'Detalle'}}</td>
+            </tr>
+          </tbody>
+        </v-simple-table>
       </v-card-text>
     </v-card>
   </v-container>
@@ -51,15 +68,6 @@ export default {
           );
         });
       }
-    },
-    columnas: function() {
-      var result = [];
-      if (this.catálogo.length > 0) {
-        Object.keys(this.catálogo[0]).forEach(k => {
-          result.push({ value: k, text: k });
-        });
-      }
-      return result;
     }
   }
 };

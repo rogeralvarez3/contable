@@ -1,11 +1,11 @@
 <template>
   <v-app>
-    <v-navigation-drawer app clipped>
+    <v-navigation-drawer app clipped v-model="$store.state.drawer">
       <v-list-item
-        v-for="mn in menu"
-        :key="mn.value"
-        @click="mn.action();menu_active=mn.value"
-        :class="mn.value==menu_active?'active-menu':''"
+        v-for="(mn,i) in menu"
+        :key="i"
+        @click="mn.action();menu_active=i"
+        :class="i==menu_active?'active-menu':''"
       >
         <v-list-item-icon>
           <v-icon v-text="mn.icon"></v-icon>
@@ -16,7 +16,7 @@
       </v-list-item>
     </v-navigation-drawer>
     <v-app-bar app dense dark clipped-left class="elevation-1">
-      <v-app-bar-nav-icon class="hidden-lg-and-up"></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon v-if="!$store.state.drawer" @click="$store.state.drawer=!$store.state.drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>ContApp</v-toolbar-title>
     </v-app-bar>
     <v-content>
@@ -40,13 +40,19 @@
 <script>
 import Router from "./router/index";
 import Store from "./store/index";
-export default {
+var mv= {
   name: "App",
   data: () => ({
     menu_active: 0,
     menu: [
       {
-        value: 1,
+        text: "Ocultar menú",
+        icon: "mdi-chevron-left",
+        action: function() {
+          Store.state.drawer=false
+        }
+      },
+      {
         text: "Catálogo",
         icon: "mdi-book",
         action: function() {
@@ -54,7 +60,6 @@ export default {
         }
       },
       {
-        value: 2,
         text: "Enlazar cuentas",
         icon: "mdi-link",
         action: function() {
@@ -62,7 +67,6 @@ export default {
         }
       },
       {
-        value: 3,
         text: "Comprobantes",
         icon: "mdi-note",
         action: function() {
@@ -70,7 +74,6 @@ export default {
         }
       },
       {
-        value: 4,
         text: "Usuario",
         icon: "mdi-account",
         action: function() {
@@ -78,7 +81,6 @@ export default {
         }
       },
       {
-        value: 5,
         text: "Salir",
         icon: "mdi-close",
         action: function() {
@@ -97,8 +99,12 @@ export default {
     Store.dispatch("getData");
   }
 };
+export default mv
 </script>
 <style lang="css">
+body{
+  font-size:9px;
+}
 .v-card {
   box-shadow: 1px 1px 4px #555;
 }

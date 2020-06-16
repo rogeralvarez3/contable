@@ -7,6 +7,7 @@ export default new Vuex.Store({
   state: {
     api: "http://localhost:3000",
     cargando: false,
+    drawer:undefined,
     data: [
       { tabla: "cont_catalogo", variable: "catálogo" },
       { tabla: "csituacion", variable: "situaciones" },
@@ -86,8 +87,18 @@ export default new Vuex.Store({
           return cta.tipo == 2;
         });
       }
-      result=result.slice(0,11)
+      result.forEach(cta=>{
+        cta.fullText=cta.cuenta+" "+cta.descripción
+      })
       return result;
     },
+    dlookup:(state)=>(params)=>{
+      var result= state[params.tabla].filter(item=>{
+        return item[params.campo] == params.valor
+      })
+      if(result.length>0){
+        return result[0]
+      }else{return {}}
+    }
   },
 });
