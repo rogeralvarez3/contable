@@ -15,12 +15,16 @@ export default new Vuex.Store({
       { tabla: "cont_integracion", variable: "enlaces" },
       { tabla: "ctipos_pago", variable: "tipos_pago" },
       { tabla: "fsucursal", variable: "sucursales" },
+      { tabla: "cfondo", variable: "fondos" },
+      {tabla:"view_comprobantes",variable:"comprobantes"}
     ],
     sucurales: [],
     catálogo: [],
     situaciones: [],
+    fondos:[],
     sectores: [],
     enlaces: [],
+    comprobantes:[],
     tipos_pago: [],
     comprobanteActual: { id: 0, fecha: "", detalle: [] },
   },
@@ -35,7 +39,7 @@ export default new Vuex.Store({
   actions: {
     getData: function({ commit, state }, payload) {
       commit("setCargando", true);
-      const url = `${state.api}/getData`;
+      const url = `${state.api}/get`;
       if (payload) {
         fetch(url, {
           method: "post",
@@ -99,6 +103,16 @@ export default new Vuex.Store({
       if(result.length>0){
         return result[0]
       }else{return {}}
+    },
+    comprobantes:(state)=>(texto)=>{
+      if(texto.trim.length===0){return state.comprobantes}
+      return state.comprobantes.filter(item=>{
+        var cad=""
+        Object.keys(item).forEach(k=>{
+          cad+=item[k]+" "
+        })
+        return cad.toLowerCase().indexOf(texto.toLowerCase())>=0;
+      });
     }
   },
 });

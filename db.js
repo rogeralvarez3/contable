@@ -10,7 +10,9 @@ const con = mysql.createConnection({
 
 var get = async function(data) {
   var result = new Promise((resolve) => {
-    con.query(`select * from ${data.tabla}`, (err, rows) => {
+    if(data.condición){data.condición="where "+data.condición}else{data.condición=""}
+    if(!data.campos){data.campos="*"}
+    con.query(`select ${data.campos} from ${data.tabla} ${data.condición}`, (err, rows) => {
       if (err) {
         resolve(err);
       } else {
@@ -43,10 +45,16 @@ var save = async function(data) {
     //console.log(sql);
     con.query(sql, (err, rows) => {
       if (err) {
-        //console.log(err);
+        console.log(err);
         resolve(err);
       } else {
-        //console.log(rows);
+        if(data.children){
+          data.children.forEach(child=>{
+            child.id_comprobante=rows.insertId
+            child.id=0
+            save({data:child,tabla:data.childTable})
+          })
+        }
         resolve(rows);
       }
     });
