@@ -74,6 +74,20 @@ var mv= {
         }
       },
       {
+        text: "Cheques",
+        icon: "mdi-ticket-account",
+        action: function() {
+          Router.push("/cheques").catch(() => {});
+        }
+      },
+      {
+        text: "Depósitos",
+        icon: "mdi-receipt",
+        action: function() {
+          Router.push("/depositos").catch(() => {});
+        }
+      },
+      {
         text: "Usuario",
         icon: "mdi-account",
         action: function() {

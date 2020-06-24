@@ -87,6 +87,7 @@
                 v-for="cta in cuentasDetalle"
                 :key="cta.value"
                 @click="selected.cuenta = cta.value"
+                @dblclick="save()"
                 :class="selected.cuenta == cta.value ? 'selected' : ''"
               >
                 <td>{{ cta.text.split(" - ")[0] }}</td>

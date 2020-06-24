@@ -3,6 +3,8 @@ import VueRouter from "vue-router";
 import Catálogo from "../views/Catalogo.vue";
 import Comprobantes from "../views/Comprobantes.vue";
 import Enlaces from "../views/Enlaces.vue";
+import Cheques from "../views/Cheques.vue"
+import Depositos from "../views/Depositos.vue"
 
 Vue.use(VueRouter);
 
@@ -16,6 +18,16 @@ const routes = [
     path: "/comprobantes",
     name: "comprobantes",
     component: Comprobantes,
+  },
+  {
+    path: "/cheques",
+    name: "cheques",
+    component: Cheques,
+  },
+  {
+    path: "/depositos",
+    name: "depositos",
+    component: Depositos,
   },
   {
     path: "/enlaces",

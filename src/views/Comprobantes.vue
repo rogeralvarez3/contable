@@ -326,6 +326,7 @@ export default {
         .then(r => {
           if (!r.errno) {
             mv.dlgFind = false;
+            if(!r[0]){return}
             r[0].fecha = r[0].fecha.substr(0, 10);
             mv.data = r[0];
             fetch(mv.$store.state.api + "/get", {
