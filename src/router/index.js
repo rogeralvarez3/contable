@@ -5,6 +5,7 @@ import Comprobantes from "../views/Comprobantes.vue";
 import Enlaces from "../views/Enlaces.vue";
 import Cheques from "../views/Cheques.vue"
 import Depositos from "../views/Depositos.vue"
+import Reportes from "../views/Reportes.vue"
 
 Vue.use(VueRouter);
 
@@ -28,6 +29,11 @@ const routes = [
     path: "/depositos",
     name: "depositos",
     component: Depositos,
+  },
+  {
+    path: "/reportes",
+    name: "reportes",
+    component: Reportes,
   },
   {
     path: "/enlaces",

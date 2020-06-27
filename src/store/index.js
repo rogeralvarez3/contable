@@ -18,7 +18,7 @@ export default new Vuex.Store({
       { tabla: "cfondo", variable: "fondos" },
       {tabla:"view_comprobantes",variable:"comprobantes"}
     ],
-    sucurales: [],
+    sucursales: [],
     catálogo: [],
     situaciones: [],
     fondos:[],

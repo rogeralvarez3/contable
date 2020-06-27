@@ -88,10 +88,10 @@ var mv= {
         }
       },
       {
-        text: "Usuario",
-        icon: "mdi-account",
+        text: "Reportes",
+        icon: "mdi-chart-bar",
         action: function() {
-          Router.push("/usuario").catch(() => {});
+          Router.push("/reportes").catch(() => {});
         }
       },
       {
@@ -164,5 +164,11 @@ body{
 .active-menu .v-list-item__title,
 .active-menu .v-list-item__icon i {
   color: rgb(32, 87, 168);
+}
+.active-tab {
+  background: linear-gradient(to bottom, skyblue 0%, dodgerblue 100%);
+  box-shadow: 0 0 3px #333;
+  border-radius: 10px 0 0 0;
+  text-shadow: 1px 1px 2px #ddd;
 }
 </style>
