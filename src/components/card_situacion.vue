@@ -84,14 +84,14 @@
             </thead>
             <tbody>
               <tr
-                v-for="cta in cuentasDetalle"
-                :key="cta.value"
-                @click="selected.cuenta = cta.value"
+                v-for="cta in $store.getters.cuentasDetalle(buscar)"
+                :key="cta.cuenta"
+                @click="selected.cuenta = cta.cuenta"
                 @dblclick="save()"
-                :class="selected.cuenta == cta.value ? 'selected' : ''"
+                :class="selected.cuenta == cta.cuenta ? 'selected' : ''"
               >
-                <td>{{ cta.text.split(" - ")[0] }}</td>
-                <td>{{ cta.text.split(" - ")[1] }}</td>
+                <td>{{ cta.cuenta }}</td>
+                <td>{{ cta.descripción }}</td>
               </tr>
             </tbody>
           </v-simple-table>
@@ -193,23 +193,7 @@ export default {
     }
   },
   computed: {
-    cuentasDetalle: function() {
-      var mv = this;
-      var filtro = this.$store.state.catálogo.filter(cta => {
-        return cta.tipo == 2;
-      });
-      var result = [];
-      filtro.forEach(cta => {
-        result.push({
-          value: cta.id,
-          text: cta.cuenta + " - " + cta.descripción
-        });
-      });
-      result = result.filter(f => {
-        return f.text.toLowerCase().indexOf(mv.buscar.toLowerCase()) >= 0;
-      });
-      return result;
-    }
+   
   }
 };
 </script>

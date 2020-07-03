@@ -4,7 +4,11 @@
       <v-card-title class="pt-1 pb-1 blue-grey lighten-5">
         Enlace de uentas
         <v-spacer></v-spacer>
+        <v-select class="mr-2" label="Tipo de fondo:" :items="[{value:1,text:'FONDOS PROPIOS'},{value:2,text:'FONDOS ADMINISTRADOS'}]" v-model="enlaceActual.tipo_fondo" single-line hide-details outlined dense filled>
+
+        </v-select>
         <v-select
+          label="Sector:"
           single-line
           hide-details
           :items="sectores"
@@ -58,7 +62,8 @@ export default {
         id_pago: 0,
         tipo_plazo: 0,
         id_cuenta_debe: 0,
-        id_cuenta_haber: 0
+        id_cuenta_haber: 0,
+        tipo_fondo:1
       },
       clasificación: [
         { value: 1, text: "recepción de pagos" },
@@ -88,10 +93,5 @@ export default {
   flex: none;
   max-width: 300px;
 }
-.active-tab {
-  background: linear-gradient(to bottom, skyblue 0%, dodgerblue 100%);
-  box-shadow: 0 0 3px #333;
-  border-radius: 10px 0 0 0;
-  text-shadow: 1px 1px 2px #ddd;
-}
+
 </style>

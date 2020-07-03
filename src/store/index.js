@@ -81,7 +81,7 @@ export default new Vuex.Store({
         result = state.catálogo.filter((cta) => {
           return (
             cta.tipo == 2 &&
-            (cta.cuenta + cta.descripción)
+            (cta.cuenta.replace(/-/g,'') +" "+ cta.cuenta+" "+ cta.descripción)
               .toLowerCase()
               .indexOf(text.toLowerCase()) >= 0
           );
