@@ -27,6 +27,10 @@ export default new Vuex.Store({
     comprobantes:[],
     tipos_pago: [],
     comprobanteActual: { id: 0, fecha: "", detalle: [] },
+    tipo_fondo:[
+      { value: 1, text: 'PROPIOS' },
+      { value: 2, text: 'ADMINISTRADOS' },
+    ]
   },
   mutations: {
     setVariable(state, payload) {

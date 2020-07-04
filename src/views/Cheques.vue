@@ -23,18 +23,27 @@
       <v-card-text>
         <v-layout class="mb-3">
           <v-select
-            :items="$store.state.fondos"
-            v-model="data.sucursal"
-            label="Sucursal:"
+            :items="$store.state.tipo_fondo"
+            v-model="data.tipo_fondo"
+            label="Tipo de fondo:"
             class="mr-2"
             dense hide-details
           ></v-select>
           <v-select
-            :items="$store.state.fondos"
+            :items="$store.state.sucursales"
+            v-model="data.sucursal"
+            label="Sucursal:"
+            class="mr-2"
+            dense hide-details
+            v-if="data.tipo_fondo==1"
+          ></v-select>
+          <v-select
+            :items="$store.state.fondos.filter(f=>{return f.tipo==2})"
             v-model="data.fondo"
             label="Fondo:"
             class="mr-2"
             dense hide-details
+            v-if="data.tipo_fondo==2"
           ></v-select>
         </v-layout>
         <v-card>
@@ -64,7 +73,7 @@
                 dense
                 hide-details
               ></v-text-field>
-              <div class="pa-3">la cantidad de: <strong class="large-text">{{data.cantidad}}</strong></div>
+              <div class="pa-3">la cantidad de: <strong class="large-text">{{data.cantidad}}{{` ${cantidadEnLetras}`}}</strong></div>
               
             </v-layout>
             <v-text-field
@@ -165,6 +174,7 @@
 </template>
 
 <script>
+import utils from "../../utils.js"
 export default {
   data() {
     return {
@@ -174,7 +184,8 @@ export default {
         fecha:'',
         nombre:'',
         concepto:'',
-        cantidad:0
+        cantidad:0,
+        tipo_fondo:1
       },
       cuentas: [],
       nueva:{debe:0,haber:0,id:'',cuenta:'',descripción:''},
@@ -209,6 +220,10 @@ export default {
           })
           if(result.debe===result.haber){result.ok=true;mv.data.cantidad=result.debe}else{mv.data.cantidad=0}
           return result
+      },
+      cantidadEnLetras:function(){
+        var mv=this
+        return utils.num2Letras(mv.data.cantidad,".","córdobas")
       }
   }
 
