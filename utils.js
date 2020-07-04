@@ -132,6 +132,8 @@ var num2Letras = function num2Letras(numero, signoDecimal, moneda, recursivo) {
   if (result.enteros.indexOf(" ún ") >= 0) {
     result.enteros = result.enteros.replace(/ ún /, " un ");
   }
-  return result.enteros + " " + moneda + result.decimales;
+  var strResult=result.enteros + " " + moneda + result.decimales;
+  strResult=strResult.replace(/  /g," ")
+  return strResult
 };
 module.exports = { num2Letras: num2Letras };
