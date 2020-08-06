@@ -128,16 +128,19 @@ body{
 .v-card__actions {
   background: linear-gradient(to bottom, #eee 0%, #ccc 100%);
 }
-.v-card__title {
-  background: linear-gradient(to top, #eee 0%, #ccc 100%);
+.v-card__title, .v-dialog > .v-card > .v-card__title {
+  background: linear-gradient(to bottom, #eee 0%,rgb(200,200,200)50%, #bbb 50%, rgb(240,240,240)100%);
   text-shadow: 1px 1px 2px white;
   color: #555;
+  border:1px solid #ddd;
+  border-top:none;
+  padding:4px !important;
 }
 .v-btn--fab.v-btn--contained {
   box-shadow: 1px 1px 4px #555;
 }
 .theme--dark.v-app-bar.v-toolbar.v-sheet {
-  background: linear-gradient(to bottom, #555 0%, #333 100%);
+  background: linear-gradient(to bottom,rgb(255, 255, 255) 0%, rgb(109, 114, 124) 50%, rgb(90, 96, 104) 50%,rgb(185, 190, 204) 100%);
   text-shadow: 1px 1px 3px black;
   color: #ddd;
   font-weight: bold;
@@ -153,12 +156,12 @@ body{
   font-weight: bold;
   color: #555;
 }
-.active-menu {
+.active-menu, .v-list-item .list-item--active {
   background: linear-gradient(
     to bottom,
     rgba(255, 255, 255, 0.2) 0%,
     rgba(0, 100, 255, 0.1) 100%
-  );
+  ) ;
   box-shadow: 0px 1px 3px #aaa;
 }
 .active-menu .v-list-item__title,
@@ -170,5 +173,12 @@ body{
   box-shadow: 0 0 3px #333;
   border-radius: 10px 0 0 0;
   text-shadow: 1px 1px 2px #ddd;
+}
+
+.theme--dark.v-btn:not(.v-btn--flat):not(.v-btn--text):not(.v-btn--outlined) {
+    /* background-color: #272727; */
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0.8)0%,rgba(255,255,255,0.3)50%, transparent 40%, rgba(255,255,255,0.6)100%) !important;
+    border:1px solid black;
+    border-radius: 15px;
 }
 </style>

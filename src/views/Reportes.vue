@@ -13,9 +13,9 @@
                   <v-divider></v-divider>
                   <v-card-text>
                       <h1>{{tb.text}}</h1>
-                      <v-image>
+                      <v-img>
                           <img :src="image" alt="">
-                      </v-image>
+                      </v-img>
                   </v-card-text>
               </v-card></v-container>
           </v-tab-item>

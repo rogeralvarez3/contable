@@ -2,10 +2,19 @@
   <v-container>
     <v-dialog width="800" v-model="dlgFind">
       <v-card>
-        <v-card-title class="pa-0">
-          <span class="pl-2">Buscar comprobante</span>
+        <v-card-title class="">
+          <v-text-field
+              hide-details
+              dense
+              outlined
+              rounded
+              filled
+              v-model="find"
+              append-icon="mdi-magnify"
+              placeholder="Buscar comprobante..."
+            ></v-text-field>
           <v-spacer></v-spacer>
-
+          
           <v-btn small dark fab color="red" @click="dlgFind = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
@@ -13,14 +22,7 @@
         <v-divider></v-divider>
         <v-card-text>
           <v-container class="pl-0 pr-0">
-            <v-text-field
-              hide-details
-              dense
-              outlined
-              v-model="find"
-              append-icon="mdi-magnify"
-              placeholder="buscar..."
-            ></v-text-field>
+            
             <v-simple-table dense fixed-header height="350">
               <thead>
                 <tr>
@@ -40,7 +42,7 @@
                   @click="getComprobante(row.id)"
                 >
                   <td>{{ row.id }}</td>
-                  <td>{{ new Date(row.fecha).toLocaleDateString() }}</td>
+                  <td>{{ row.fecha.split("T")[0].split("-").reverse().join("/") }}</td>
                   <td>{{ row.sucursal.toLowerCase() }}</td>
                   <td>{{ row.fondo.toLowerCase() }}</td>
                   <td>{{ row.sector.toLowerCase() }}</td>
@@ -54,7 +56,7 @@
       </v-card>
     </v-dialog>
     <v-card width="900" class="mt-2">
-      <v-card-title class="pa-0">
+      <v-card-title class="">
         <v-btn fab small text disabled>
           <v-icon>mdi-file</v-icon> </v-btn
         >Comprobantes de diario
@@ -65,16 +67,49 @@
               fab
               small
               dark
+              color="success"
+              class="mr-1"
+              v-on="on"
+              @click="guardarComprobante()"
+            >
+              <v-icon>mdi-content-save</v-icon>
+            </v-btn>
+          </template>
+          <span>Guardar comprobante</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              fab
+              small
+              dark
+              color="blue-grey"
+              class="mr-1"
+              v-on="on"
+              @click="()=>{}"
+              v-if="data.cerrado == 0"
+            >
+              <v-icon>mdi-printer</v-icon>
+            </v-btn>
+          </template>
+          <span>Imprimir</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              fab
+              small
+              dark
               color="warning"
               class="mr-1"
               v-on="on"
-              @click="getComprobante(data.id)"
+              @click="()=>{}"
               v-if="data.cerrado == 0"
             >
-              <v-icon>mdi-refresh</v-icon>
+              <v-icon>mdi-sticker-remove</v-icon>
             </v-btn>
           </template>
-          <span>Actualizar</span>
+          <span>Borrar</span>
         </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on }">
@@ -99,6 +134,7 @@
               v-on="on"
               fab
               small
+              color="teal"
               dark
               class="mr-1"
               @click="dlgFind = true"
@@ -156,6 +192,7 @@
             class="mr-2"
             v-model="data.número"
             :disabled="data.cerrado > 0"
+            
           ></v-text-field>
           <v-text-field
             label="Descripción:"
@@ -166,7 +203,7 @@
           ></v-text-field>
         </v-layout>
         <v-card>
-          <v-card-title class="pa-0">
+          <v-card-title class="">
             <v-btn fab small text disabled>
               <v-icon>mdi-menu</v-icon> </v-btn
             >Detalle del comprobante
@@ -243,23 +280,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-btn
-              fab
-              small
-              dark
-              color="success"
-              v-on="on"
-              v-show="totales.ok"
-              @click="guardarComprobante()"
-              v-if="data.cerrado == 0"
-            >
-              <v-icon>mdi-content-save</v-icon>
-            </v-btn>
-          </template>
-          <span>Guardar comprobante</span>
-        </v-tooltip>
+        
         <v-spacer />
       </v-card-actions>
     </v-card>
@@ -344,6 +365,7 @@ export default {
         concepto: "",
       },
       cuentas: [],
+      numerosDeComprobantes:[]
     };
   },
   methods: {
@@ -462,11 +484,22 @@ export default {
       //console.log(result)
       return result;
     },
+    getNumsComp:function(){
+      var mv=this
+      var url=`${mv.$store.state.api}/get`
+      console.log(url)
+      fetch(url,{body:JSON.stringify({tabla:"v_numero_de_comprobantes"}),method:"post",headers:{"content-Type":"application/json"}}).then(json=>{
+        return json.json()
+      }).then(r=>{
+        //console.log('resultado',r)
+        mv.numerosDeComprobantes=r
+      })
+    }
   },
   computed: {
     cuentasDetalle: function() {
       var mv = this;
-      return mv.$store.getters.cuentasDetalle(mv.dlgBuscar);
+      return mv.$store.getters.cuentasDetalle();
     },
     totales: function() {
       var mv = this;
@@ -492,9 +525,11 @@ export default {
         return { debe: debe, haber: haber, ok: false };
       }
     },
+    
   },
   mounted: function() {
     this.data.fecha = this.fechaActual();
+    //this.getNumsComp()
   },
 };
 </script>
