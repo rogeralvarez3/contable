@@ -4,8 +4,10 @@ import router from "./router";
 import store from "./store";
 import vuetify from './plugins/vuetify';
 import "@mdi/font/css/materialdesignicons.min.css"
+import swal from "vue-sweetalert2"
 
 Vue.config.productionTip = false;
+Vue.use(swal)
 
 new Vue({
   router,

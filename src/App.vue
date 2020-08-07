@@ -175,10 +175,11 @@ body{
   text-shadow: 1px 1px 2px #ddd;
 }
 
-.theme--dark.v-btn:not(.v-btn--flat):not(.v-btn--text):not(.v-btn--outlined) {
+.theme--dark.v-btn:not(.v-btn--flat):not(.v-btn--text):not(.v-btn--outlined),.theme--light.v-btn:not(.v-btn--flat):not(.v-btn--text):not(.v-btn--outlined) {
     /* background-color: #272727; */
     background-image: linear-gradient(to bottom, rgba(255,255,255,0.8)0%,rgba(255,255,255,0.3)50%, transparent 40%, rgba(255,255,255,0.6)100%) !important;
-    border:1px solid black;
+    border:1px solid #aaa;
     border-radius: 15px;
 }
+
 </style>

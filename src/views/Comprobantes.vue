@@ -71,6 +71,7 @@
               class="mr-1"
               v-on="on"
               @click="guardarComprobante()"
+              :disabled="!totales.ok"
             >
               <v-icon>mdi-content-save</v-icon>
             </v-btn>
@@ -87,7 +88,7 @@
               class="mr-1"
               v-on="on"
               @click="()=>{}"
-              v-if="data.cerrado == 0"
+              :disabled="!totales.ok"
             >
               <v-icon>mdi-printer</v-icon>
             </v-btn>
@@ -104,7 +105,7 @@
               class="mr-1"
               v-on="on"
               @click="()=>{}"
-              v-if="data.cerrado == 0"
+              :disabled="!totales.ok"
             >
               <v-icon>mdi-sticker-remove</v-icon>
             </v-btn>
@@ -241,8 +242,8 @@
                 <tr v-for="(cta, i) in cuentas" :key="cta.id">
                   <td>{{ cta.cuenta }}</td>
                   <td>{{ cta.descripción }}</td>
-                  <td class="text-right">{{ cta.debe }}</td>
-                  <td class="text-right">{{ cta.haber }}</td>
+                  <td class="text-right">{{ parseFloat(cta.debe).toFixed(2) }}</td>
+                  <td class="text-right">{{ parseFloat(cta.haber).toFixed(2) }}</td>
                   <td>
                     <v-tooltip top>
                       <template v-slot:activator="{ on }">
@@ -270,8 +271,8 @@
               >
                 <tr>
                   <th colspan="2">TOTALES:</th>
-                  <th>{{ totales.debe }}</th>
-                  <th>{{ totales.haber }}</th>
+                  <th>{{ parseFloat(totales.debe).toFixed(2) }}</th>
+                  <th>{{ parseFloat(totales.haber).toFixed(2) }}</th>
                 </tr>
               </tfoot>
             </v-simple-table>
@@ -329,7 +330,7 @@
         <v-divider />
         <v-card-actions>
           <v-spacer />
-          <v-btn v-text="'Insertar'" @click="agregarCuenta()" />
+          <v-btn v-text="'Insertar'" color="primary" dark @click="agregarCuenta()" :disabled="(selectedCta.debe<=0 && selectedCta.haber<=0) || selectedCta.id_cuenta==0 " />
           <v-spacer />
         </v-card-actions>
       </v-card>
@@ -441,6 +442,12 @@ export default {
           return d.text();
         })
         .then((r) => {
+          if(!r.errno){
+            mv.$swal({icon:"success",title:"Guardado correctamente!",position:"top-end",showConfirmButton:false,timer:4000,toast:true})
+          }else{
+            mv.$swal({icon:"success",title:`Error ${r.errno}`,text:r.sqlMessage,position:"top-end",showConfirmButton:false,timer:4000,toast:true})
+          }
+          
           console.log(r);
         });
     },
