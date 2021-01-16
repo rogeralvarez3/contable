@@ -4,17 +4,17 @@
       <v-card>
         <v-card-title class="">
           <v-text-field
-              hide-details
-              dense
-              outlined
-              rounded
-              filled
-              v-model="find"
-              append-icon="mdi-magnify"
-              placeholder="Buscar comprobante..."
-            ></v-text-field>
+            hide-details
+            dense
+            outlined
+            rounded
+            filled
+            v-model="find"
+            append-icon="mdi-magnify"
+            placeholder="Buscar comprobante..."
+          ></v-text-field>
           <v-spacer></v-spacer>
-          
+
           <v-btn small dark fab color="red" @click="dlgFind = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
@@ -22,7 +22,6 @@
         <v-divider></v-divider>
         <v-card-text>
           <v-container class="pl-0 pr-0">
-            
             <v-simple-table dense fixed-header height="350">
               <thead>
                 <tr>
@@ -42,7 +41,15 @@
                   @click="getComprobante(row.id)"
                 >
                   <td>{{ row.id }}</td>
-                  <td>{{ row.fecha.split("T")[0].split("-").reverse().join("/") }}</td>
+                  <td>
+                    {{
+                      row.fecha
+                        .split("T")[0]
+                        .split("-")
+                        .reverse()
+                        .join("/")
+                    }}
+                  </td>
                   <td>{{ row.sucursal.toLowerCase() }}</td>
                   <td>{{ row.fondo.toLowerCase() }}</td>
                   <td>{{ row.sector.toLowerCase() }}</td>
@@ -57,10 +64,26 @@
     </v-dialog>
     <v-card width="900" class="mt-2">
       <v-card-title class="">
-        <v-btn fab small text disabled>
-          <v-icon>mdi-file</v-icon> </v-btn
+        <v-btn fab small text disabled> <v-icon>mdi-file</v-icon> </v-btn
         >Comprobantes de diario
         <v-spacer></v-spacer>
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              fab
+              small
+              dark
+              color="primary"
+              class="mr-1"
+              v-on="on"
+              @click="limpiar()"
+              :disabled="data.cerrado==0"
+            >
+              <v-icon>mdi-plus</v-icon>
+            </v-btn>
+          </template>
+          <span>Nuevo comprobante</span>
+        </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on }">
             <v-btn
@@ -71,7 +94,7 @@
               class="mr-1"
               v-on="on"
               @click="guardarComprobante()"
-              :disabled="!totales.ok"
+              :disabled="!totales.ok || data.cerrado>0"
             >
               <v-icon>mdi-content-save</v-icon>
             </v-btn>
@@ -87,8 +110,8 @@
               color="blue-grey"
               class="mr-1"
               v-on="on"
-              @click="()=>{}"
-              :disabled="!totales.ok"
+              @click="() => {}"
+              :disabled="!totales.ok || data.cerrado>0"
             >
               <v-icon>mdi-printer</v-icon>
             </v-btn>
@@ -104,8 +127,8 @@
               color="warning"
               class="mr-1"
               v-on="on"
-              @click="()=>{}"
-              :disabled="!totales.ok"
+              @click="() => {}"
+              :disabled="!totales.ok || data.cerrado>0"
             >
               <v-icon>mdi-sticker-remove</v-icon>
             </v-btn>
@@ -175,7 +198,11 @@
           ></v-select>
           <v-select
             label="Fondo:"
-            :items="$store.state.fondos.filter(f=>{return f.tipo==2})"
+            :items="
+              $store.state.fondos.filter((f) => {
+                return f.tipo == 2;
+              })
+            "
             class="mr-2"
             v-model="data.fondo"
             :disabled="data.cerrado > 0"
@@ -193,7 +220,6 @@
             class="mr-2"
             v-model="data.número"
             :disabled="data.cerrado > 0"
-            
           ></v-text-field>
           <v-text-field
             label="Descripción:"
@@ -205,8 +231,7 @@
         </v-layout>
         <v-card>
           <v-card-title class="">
-            <v-btn fab small text disabled>
-              <v-icon>mdi-menu</v-icon> </v-btn
+            <v-btn fab small text disabled> <v-icon>mdi-menu</v-icon> </v-btn
             >Detalle del comprobante
             <v-spacer></v-spacer>
 
@@ -242,8 +267,12 @@
                 <tr v-for="(cta, i) in cuentas" :key="cta.id">
                   <td>{{ cta.cuenta }}</td>
                   <td>{{ cta.descripción }}</td>
-                  <td class="text-right">{{ parseFloat(cta.debe).toFixed(2) }}</td>
-                  <td class="text-right">{{ parseFloat(cta.haber).toFixed(2) }}</td>
+                  <td class="text-right">
+                    {{ cta.debe ? parseFloat(cta.debe).toFixed(2) : "0.00" }}
+                  </td>
+                  <td class="text-right">
+                    {{ cta.haber ? parseFloat(cta.haber).toFixed(2) : "0.00" }}
+                  </td>
                   <td>
                     <v-tooltip top>
                       <template v-slot:activator="{ on }">
@@ -254,6 +283,7 @@
                           color="red"
                           v-on="on"
                           @click="cuentas.splice(i, 1)"
+                          :disabled="data.cerrado>0"
                         >
                           <v-icon small>mdi-close</v-icon>
                         </v-btn>
@@ -279,17 +309,11 @@
           </v-card-text>
         </v-card>
       </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        
-        <v-spacer />
-      </v-card-actions>
     </v-card>
     <v-dialog width="500" v-model="dlg">
       <v-card>
         <v-card-title class="pa-0 grey lighten-4">
-          <v-btn fab small text disabled>
-            <v-icon>mdi-plus</v-icon> </v-btn
+          <v-btn fab small text disabled> <v-icon>mdi-plus</v-icon> </v-btn
           >Agregar cuenta
           <v-spacer></v-spacer>
           <v-btn fab small dark color="error" @click="dlg = false">
@@ -330,7 +354,16 @@
         <v-divider />
         <v-card-actions>
           <v-spacer />
-          <v-btn v-text="'Insertar'" color="primary" dark @click="agregarCuenta()" :disabled="(selectedCta.debe<=0 && selectedCta.haber<=0) || selectedCta.id_cuenta==0 " />
+          <v-btn
+            v-text="'Insertar'"
+            color="primary"
+            dark
+            @click="agregarCuenta()"
+            :disabled="
+              (selectedCta.debe <= 0 && selectedCta.haber <= 0) ||
+                selectedCta.id_cuenta == 0
+            "
+          />
           <v-spacer />
         </v-card-actions>
       </v-card>
@@ -355,6 +388,17 @@ export default {
         descripción: "",
         cerrado: 0,
       },
+      dataInit: {
+        id: 0,
+        fecha: "",
+        tipo_fondo: 1,
+        sucursal: 0,
+        fondo: 0,
+        sector: 0,
+        número: "",
+        descripción: "",
+        cerrado: 0,
+      },
       dlg: false,
       dlgBuscar: "",
       selectedCta: {
@@ -366,10 +410,15 @@ export default {
         concepto: "",
       },
       cuentas: [],
-      numerosDeComprobantes:[]
+      numerosDeComprobantes: [],
     };
   },
   methods: {
+    limpiar: function() {
+      let mv = this;
+      mv.data = Object.assign({}, mv.dataInit);
+      mv.cuentas = [];
+    },
     getComprobante(id) {
       var mv = this;
       fetch(mv.$store.state.api + "/get", {
@@ -442,12 +491,27 @@ export default {
           return d.text();
         })
         .then((r) => {
-          if(!r.errno){
-            mv.$swal({icon:"success",title:"Guardado correctamente!",position:"top-end",showConfirmButton:false,timer:4000,toast:true})
-          }else{
-            mv.$swal({icon:"success",title:`Error ${r.errno}`,text:r.sqlMessage,position:"top-end",showConfirmButton:false,timer:4000,toast:true})
+          if (!r.errno) {
+            mv.$swal({
+              icon: "success",
+              title: "Guardado correctamente!",
+              position: "top-end",
+              showConfirmButton: false,
+              timer: 4000,
+              toast: true,
+            });
+          } else {
+            mv.$swal({
+              icon: "success",
+              title: `Error ${r.errno}`,
+              text: r.sqlMessage,
+              position: "top-end",
+              showConfirmButton: false,
+              timer: 4000,
+              toast: true,
+            });
           }
-          
+
           console.log(r);
         });
     },
@@ -491,17 +555,23 @@ export default {
       //console.log(result)
       return result;
     },
-    getNumsComp:function(){
-      var mv=this
-      var url=`${mv.$store.state.api}/get`
-      console.log(url)
-      fetch(url,{body:JSON.stringify({tabla:"v_numero_de_comprobantes"}),method:"post",headers:{"content-Type":"application/json"}}).then(json=>{
-        return json.json()
-      }).then(r=>{
-        //console.log('resultado',r)
-        mv.numerosDeComprobantes=r
+    getNumsComp: function() {
+      var mv = this;
+      var url = `${mv.$store.state.api}/get`;
+      console.log(url);
+      fetch(url, {
+        body: JSON.stringify({ tabla: "v_numero_de_comprobantes" }),
+        method: "post",
+        headers: { "content-Type": "application/json" },
       })
-    }
+        .then((json) => {
+          return json.json();
+        })
+        .then((r) => {
+          //console.log('resultado',r)
+          mv.numerosDeComprobantes = r;
+        });
+    },
   },
   computed: {
     cuentasDetalle: function() {
@@ -513,15 +583,14 @@ export default {
       var debe = 0;
       var haber = 0;
       mv.cuentas.forEach((cta) => {
-        debe += parseFloat(cta.debe);
-        haber += parseFloat(cta.haber);
+        debe += cta.debe ? parseFloat(cta.debe) : 0.0;
+        haber += cta.haber ? parseFloat(cta.haber) : 0.0;
       });
       if (debe == haber && debe > 0) {
         if (
           mv.data.fecha.length > 0 &&
           mv.data.sucursal > 0 &&
           mv.data.sector > 0 &&
-          mv.data.número.length > 0 &&
           mv.data.descripción.length > 0
         ) {
           return { debe: debe, haber: haber, ok: true };
@@ -532,7 +601,6 @@ export default {
         return { debe: debe, haber: haber, ok: false };
       }
     },
-    
   },
   mounted: function() {
     this.data.fecha = this.fechaActual();

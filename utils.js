@@ -136,4 +136,7 @@ var num2Letras = function num2Letras(numero, signoDecimal, moneda, recursivo) {
   strResult=strResult.replace(/ {2}/g," ")
   return strResult
 };
-module.exports = { num2Letras: num2Letras };
+function x(){
+  ///
+}
+module.exports = { num2Letras: num2Letras,funcionX:x };

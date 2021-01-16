@@ -20,7 +20,7 @@
         </v-btn>
       </v-card-title>
       <v-divider></v-divider>
-      <v-card-text>     
+      <v-card-text>
         <v-simple-table dense>
           <thead>
             <tr>
@@ -31,11 +31,18 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(cta,i) in catálogo" :key="i">
-              <td>{{cta.cuenta}}</td>
-              <td>{{cta.descripción}}</td>
-              <td>{{cta.nivel}}</td>
-              <td>{{cta.tipo==1?'Resumen':'Detalle'}}</td>
+            <tr v-for="(cta, i) in catálogo" :key="i" :class="cta.nivel == 1
+                  ? `font-weight-bold ${niveles[cta.nivel - 1]}--text`
+                  : `${niveles[cta.nivel - 1]}--text`">
+              <td>
+                <span
+                  :class="`pl-${(cta.nivel - 1) * 2}`"
+                ></span
+                >{{ cta.cuenta.replace(/-/g,'') }}
+              </td>
+              <td>{{ cta.descripción }}</td>
+              <td>{{ cta.nivel }}</td>
+              <td>{{ cta.tipo == 1 ? "Resumen" : "Detalle" }}</td>
             </tr>
           </tbody>
         </v-simple-table>
@@ -51,7 +58,8 @@ export default {
     return {
       buscar: "",
       rows: 20,
-      rowsItemsPerPage: [10, 20, 30]
+      rowsItemsPerPage: [10, 20, 30],
+      niveles: ["red", "pink", "purple", "deep-purple", "indigo","blue"]
     };
   },
   computed: {
@@ -60,7 +68,7 @@ export default {
       if (mv.buscar.length == 0) {
         return this.$store.state.catálogo;
       } else {
-        return this.$store.state.catálogo.filter(row => {
+        return this.$store.state.catálogo.filter((row) => {
           return (
             (row.descripción + " " + row.cuenta)
               .toLowerCase()
@@ -68,8 +76,8 @@ export default {
           );
         });
       }
-    }
-  }
+    },
+  },
 };
 </script>
 <style lang="css" scoped>
@@ -81,7 +89,7 @@ th {
   flex: none;
 }
 .v-data-table {
-  max-width: 800px;
+  
   flex: none;
 }
 </style>

@@ -5,20 +5,43 @@ const con = mysql.createConnection({
   port: 3312,
   user: "root",
   password: "root@",
-  database: "genezis",
+  database: "genezis_prueba"
 });
-
-var get = async function(data) {
-  var result = new Promise((resolve) => {
-    if(data.condición){data.condición="where "+data.condición}else{data.condición=""}
-    if(!data.campos){data.campos="*"}
-    con.query(`select ${data.campos} from ${data.tabla} ${data.condición}`, (err, rows) => {
-      if (err) {
-        resolve(err);
-      } else {
-        resolve(rows);
+var exeSP = async function(data) {
+  var result = new Promise(resolve => {
+    con.query(
+      `call ${data}`,
+      (err, rows) => {
+        if (err) {
+          resolve(err);
+        } else {
+          resolve(rows);
+        }
       }
-    });
+    );
+  });
+  return await result;
+};
+var get = async function(data) {
+  var result = new Promise(resolve => {
+    if (data.condición) {
+      data.condición = "where " + data.condición;
+    } else {
+      data.condición = "";
+    }
+    if (!data.campos) {
+      data.campos = "*";
+    }
+    con.query(
+      `select ${data.campos} from ${data.tabla} ${data.condición}`,
+      (err, rows) => {
+        if (err) {
+          resolve(err);
+        } else {
+          resolve(rows);
+        }
+      }
+    );
   });
   return await result;
 };
@@ -27,7 +50,7 @@ var save = async function(data) {
   var valores = [];
   var campos = [];
   var camposValores = [];
-  Object.keys(data.data).forEach((k) => {
+  Object.keys(data.data).forEach(k => {
     if (k != "id") {
       campos.push(`${k}`);
       valores.push(`'${data.data[k]}'`);
@@ -35,7 +58,7 @@ var save = async function(data) {
     }
   });
 
-  var result = new Promise((resolve) => {
+  var result = new Promise(resolve => {
     var sql = `insert into ${data.tabla}(${campos.join(
       ","
     )}) values(${valores.join(",")});`;
@@ -48,12 +71,12 @@ var save = async function(data) {
         console.log(err);
         resolve(err);
       } else {
-        if(data.children){
-          data.children.forEach(child=>{
-            child.id_comprobante=rows.insertId
-            child.id=0
-            save({data:child,tabla:data.childTable})
-          })
+        if (data.children) {
+          data.children.forEach(child => {
+            child.id_comprobante = rows.insertId;
+            child.id = 0;
+            save({ data: child, tabla: data.childTable });
+          });
         }
         resolve(rows);
       }
@@ -62,4 +85,4 @@ var save = async function(data) {
   return await result;
 };
 
-module.exports = { get, save };
+module.exports = { get, save, exeSP };

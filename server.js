@@ -1,14 +1,19 @@
 const express = require("express");
 const app = express();
-const bodyParser = require("body-parser");
+//const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
 const db = require("./db");
+const history = require("connect-history-api-fallback");
 
-app.use(bodyParser());
+
+app.use(history());
+app.use(express.json());
+
 app.use(cors());
-app.use(express.static(path.resolve(__dirname, "public")));
+app.use(express.static(path.resolve(__dirname, "dist")));
 app.set("port", process.env.port || 3000);
+
 
 app.post("/get", (req, res) => {
   var data = req.body;
@@ -17,6 +22,13 @@ app.post("/get", (req, res) => {
     res.send(r);
   });
 });
+app.post("/exeSP",(req,res)=>{
+  var data = req.body;
+  console.log(data)
+  db.exeSP(data.sp).then((r) => {
+    res.send(r);
+  });
+})
 app.post("/save", (req, res) => {
   var data = req.body;
   console.log(data);
