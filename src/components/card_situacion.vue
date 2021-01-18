@@ -42,6 +42,7 @@
                   selected.id = showLink(pago.value, 0).value;
                   selected.id_pago = pago.value;
                   selected.mov = 'id_cuenta_haber';
+                  
                   dlg = true;
                 "
                 class="clickeable"
@@ -86,9 +87,9 @@
               <tr
                 v-for="cta in $store.getters.cuentasDetalle(buscar)"
                 :key="cta.cuenta"
-                @click="selected.cuenta = cta.cuenta"
+                @click="selected.cuenta = cta.id"
                 @dblclick="save()"
-                :class="selected.cuenta == cta.cuenta ? 'selected' : ''"
+                :class="selected.cuenta == cta.id? 'selected' : ''"
               >
                 <td>{{ cta.cuenta }}</td>
                 <td>{{ cta.descripción }}</td>
@@ -113,7 +114,8 @@ export default {
   props: {
     sector: Number,
     situación: Object,
-    clasificación: Number
+    clasificación: Number,
+    tipo_fondo:Number
   },
   data() {
     return {
@@ -134,6 +136,7 @@ export default {
           id_situación: mv.situación.value,
           id_sector: mv.sector,
           id_pago: mv.selected.id_pago,
+          tipo_fondo:mv.tipo_fondo,
           [mv.selected.mov]: mv.selected.cuenta
         }
       };

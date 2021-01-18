@@ -5,7 +5,7 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    api: "http://localhost:3000",
+    api: "http://192.168.1.211:3000",
     cargando: false,
     drawer: undefined,
     data: [
