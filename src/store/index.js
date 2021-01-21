@@ -17,6 +17,7 @@ export default new Vuex.Store({
       { tabla: "fsucursal", variable: "sucursales" },
       { tabla: "cfondo", variable: "fondos" },
       { tabla: "view_comprobantes", variable: "comprobantes" },
+      {tabla: "cont_enlaces_por_desembolsos",variable:"enlaces_desembolsos"}
     ],
     sucursales: [],
     catálogo: [],
@@ -31,6 +32,7 @@ export default new Vuex.Store({
       { value: 1, text: "PROPIOS" },
       { value: 2, text: "ADMINISTRADOS" },
     ],
+    enlaces_desembolsos:[]
   },
   mutations: {
     setVariable(state, payload) {

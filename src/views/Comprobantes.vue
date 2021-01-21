@@ -50,9 +50,9 @@
                         .join("/")
                     }}
                   </td>
-                  <td>{{ row.sucursal.toLowerCase() }}</td>
-                  <td>{{ row.fondo.toLowerCase() }}</td>
-                  <td>{{ row.sector.toLowerCase() }}</td>
+                  <td>{{ row.sucursal?row.sucursal.toLowerCase():'' }}</td>
+                  <td>{{ row.fondo?row.fondo.toLowerCase():'' }}</td>
+                  <td>{{ row.sector?row.sector.toLowerCase():'' }}</td>
                   <td>{{ row.número }}</td>
                   <td>{{ row.descripción }}</td>
                 </tr>
@@ -200,13 +200,13 @@
             label="Fondo:"
             :items="
               $store.state.fondos.filter((f) => {
-                return f.tipo == 2;
+                return f.tipo == data.tipo_fondo;
               })
             "
             class="mr-2"
             v-model="data.fondo"
             :disabled="data.cerrado > 0"
-            v-if="data.tipo_fondo > 1"
+            
           ></v-select>
           <v-select
             label="Sector:"
@@ -411,6 +411,7 @@ export default {
       },
       cuentas: [],
       numerosDeComprobantes: [],
+      detallePropagado:[]
     };
   },
   methods: {
@@ -555,23 +556,9 @@ export default {
       //console.log(result)
       return result;
     },
-    getNumsComp: function() {
-      var mv = this;
-      var url = `${mv.$store.state.api}/get`;
-      console.log(url);
-      fetch(url, {
-        body: JSON.stringify({ tabla: "v_numero_de_comprobantes" }),
-        method: "post",
-        headers: { "content-Type": "application/json" },
-      })
-        .then((json) => {
-          return json.json();
-        })
-        .then((r) => {
-          //console.log('resultado',r)
-          mv.numerosDeComprobantes = r;
-        });
-    },
+    generarDetallePropagado:function(){
+
+    }
   },
   computed: {
     cuentasDetalle: function() {
@@ -591,7 +578,8 @@ export default {
           mv.data.fecha.length > 0 &&
           mv.data.sucursal > 0 &&
           mv.data.sector > 0 &&
-          mv.data.descripción.length > 0
+          mv.data.descripción.length > 0 &&
+          mv.data.fondo > 0
         ) {
           return { debe: debe, haber: haber, ok: true };
         } else {

@@ -17,7 +17,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="pago in this.$store.state.tipos_pago" :key="pago.value">
+            <tr
+              v-for="pago in this.$store.state.tipos_pago"
+              :key="pago.value"
+              v-show="pago.tab == clasificación"
+            >
               <th>{{ pago.text }}:</th>
               <td
                 @dblclick="
@@ -30,11 +34,15 @@
               >
                 <v-tooltip top>
                   <template v-slot:activator="{ on }">
-                    <span
-                      v-on="on"
-                    >{{ value2text('id',showLink(pago.value, 0).text,'catálogo').cuenta }}</span>
+                    <span v-on="on">{{
+                      value2text("id", showLink(pago.value, 0).text, "catálogo")
+                        .cuenta
+                    }}</span>
                   </template>
-                  <span>{{ value2text('id',showLink(pago.value, 0).text,'catálogo').descripción }}</span>
+                  <span>{{
+                    value2text("id", showLink(pago.value, 0).text, "catálogo")
+                      .descripción
+                  }}</span>
                 </v-tooltip>
               </td>
               <td
@@ -42,18 +50,22 @@
                   selected.id = showLink(pago.value, 0).value;
                   selected.id_pago = pago.value;
                   selected.mov = 'id_cuenta_haber';
-                  
+
                   dlg = true;
                 "
                 class="clickeable"
               >
                 <v-tooltip top>
                   <template v-slot:activator="{ on }">
-                    <span
-                      v-on="on"
-                    >{{ value2text('id',showLink(pago.value, 1).text,'catálogo').cuenta }}</span>
+                    <span v-on="on">{{
+                      value2text("id", showLink(pago.value, 1).text, "catálogo")
+                        .cuenta
+                    }}</span>
                   </template>
-                  <span>{{ value2text('id',showLink(pago.value, 1).text,'catálogo').descripción }}</span>
+                  <span>{{
+                    value2text("id", showLink(pago.value, 1).text, "catálogo")
+                      .descripción
+                  }}</span>
                 </v-tooltip>
               </td>
             </tr>
@@ -89,7 +101,7 @@
                 :key="cta.cuenta"
                 @click="selected.cuenta = cta.id"
                 @dblclick="save()"
-                :class="selected.cuenta == cta.id? 'selected' : ''"
+                :class="selected.cuenta == cta.id ? 'selected' : ''"
               >
                 <td>{{ cta.cuenta }}</td>
                 <td>{{ cta.descripción }}</td>
@@ -115,13 +127,13 @@ export default {
     sector: Number,
     situación: Object,
     clasificación: Number,
-    tipo_fondo:Number
+    tipo_fondo: Number,
   },
   data() {
     return {
       dlg: false,
       buscar: "",
-      selected: { id: 0, id_pago: 0, mov: "", cuenta: "" }
+      selected: { id: 0, id_pago: 0, mov: "", cuenta: "" },
     };
   },
   methods: {
@@ -136,26 +148,26 @@ export default {
           id_situación: mv.situación.value,
           id_sector: mv.sector,
           id_pago: mv.selected.id_pago,
-          tipo_fondo:mv.tipo_fondo,
-          [mv.selected.mov]: mv.selected.cuenta
-        }
+          tipo_fondo: mv.tipo_fondo,
+          [mv.selected.mov]: mv.selected.cuenta,
+        },
       };
 
       fetch(mv.$store.state.api + "/save", {
         method: "post",
         body: JSON.stringify(data),
         headers: {
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       })
-        .then(d => {
+        .then((d) => {
           return d.json();
         })
-        .then(r => {
+        .then((r) => {
           console.log(r);
           mv.$store.dispatch("getData", {
             tabla: "cont_integracion",
-            variable: "enlaces"
+            variable: "enlaces",
           });
           mv.$store.commit("setCargando", false);
           mv.dlg = false;
@@ -164,7 +176,7 @@ export default {
     showLink: function(idPago, mov) {
       var mv = this;
       var links = mv.$store.state.enlaces;
-      var result = links.filter(l => {
+      var result = links.filter((l) => {
         return (
           l.clasificación == mv.clasificación &&
           l.id_pago == idPago &&
@@ -185,7 +197,7 @@ export default {
     },
     value2text: function(keyBuscada, valor, variable) {
       var mv = this;
-      var result = mv.$store.state[variable].filter(f => {
+      var result = mv.$store.state[variable].filter((f) => {
         return f[keyBuscada] === valor;
       });
       if (result.length === 0) {
@@ -193,11 +205,9 @@ export default {
       } else {
         return result[0];
       }
-    }
+    },
   },
-  computed: {
-   
-  }
+  computed: {},
 };
 </script>
 

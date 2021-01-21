@@ -66,7 +66,7 @@
             ></v-text-field>
             <v-checkbox
               class="ml-2"
-              v-model="rpt.soloconmoviientos"
+              v-model="rpt.soloconmovimientos"
               label="Ver solo cuentas con movimientos"
             ></v-checkbox>
             <v-btn @click="generarBalanza()">Generar</v-btn>
@@ -98,6 +98,11 @@
                 item.nivel == 1
                   ? `font-weight-bold ${niveles[item.nivel - 1]}--text`
                   : `${niveles[item.nivel - 1]}--text`
+              "
+              v-show="
+                rpt.soloconmovimientos
+                  ? item.debe2 > 0 || item.haber2 > 0
+                  : true
               "
             >
               <td>
@@ -149,7 +154,7 @@ export default {
       rpt: {
         período: "01-2020",
         mostrar: 0,
-        soloconmoviientos: false,
+        soloconmovimientos: false,
         doc: "",
         tipoFondo: 1,
         fondo: 1,
@@ -201,6 +206,8 @@ export default {
       let mv = this;
       let params = `'${mv.rpt.período}',${mv.rpt.sucursal},${mv.rpt.tipoFondo},${mv.rpt.fondo},${mv.rpt.sector}`;
       let data = JSON.stringify({ sp: `balanza(${params})` });
+      // eslint-disable-next-line no-debugger
+      debugger;
       fetch(`${mv.$store.state.api}/exeSP`, {
         method: "post",
         body: data,
@@ -232,6 +239,14 @@ export default {
       mv.rpt.fondo = mv.$store.state.fondos.length;
       return lista;
     },
+  },
+  mounted: function() {
+    let mv = this;
+    let now = new Date();
+    mv.rpt.período =
+      (now.getMonth() + 1).toString().padStart(2, "0") +
+      "-" +
+      now.getFullYear();
   },
 };
 </script>

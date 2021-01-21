@@ -70,9 +70,9 @@ export default {
       } else {
         return this.$store.state.catálogo.filter((row) => {
           return (
-            (row.descripción + " " + row.cuenta)
+            (row.descripción + " " + row.cuenta.toString().replace(/-/g,''))
               .toLowerCase()
-              .indexOf(mv.buscar.toLowerCase()) >= 0
+              .indexOf(mv.buscar.toLowerCase().replace(/-/g,'')) >= 0
           );
         });
       }

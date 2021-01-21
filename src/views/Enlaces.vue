@@ -62,7 +62,7 @@
             </v-layout>
           </v-tab-item>
           <v-tab-item value="tab3">
-            <desembolsosyotros></desembolsosyotros>
+            <desembolsosyotros :tipo_fondo="enlaceActual.tipo_fondo" :sector="enlaceActual.id_sector"></desembolsosyotros>
           </v-tab-item>
         </v-tabs-items>
       </v-card-text>
