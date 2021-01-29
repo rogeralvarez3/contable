@@ -116,14 +116,33 @@ var mv = {
       },
     ],
   }),
-  methods: {},
-  computed: {
-    cargando: function() {
-      return this.$store.state.cargando;
+  methods: {
+    getLogo: function() {
+      fetch(`${Store.state.api}/img/logo.png`)
+        .then((response) => {
+          return response.blob();
+        })
+        .then((blob) => {
+          let reader = new FileReader();
+          reader.onload = (e) => {
+            Store.commit("setVariable", {
+              variable: "logo",
+              data: e.target.result,
+            });
+          };
+          reader.readAsDataURL(blob);
+        });
     },
   },
-  mounted: () => {
+  computed: {
+    cargando: function() {
+      return Store.state.cargando;
+    },
+  },
+  mounted: function() {
     Store.dispatch("getData");
+    this.getLogo();
+    //console.log(window.location.pathname+window.location.search)
   },
 };
 export default mv;

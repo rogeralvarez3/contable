@@ -1,4 +1,6 @@
+
 /* eslint-disable no-debugger */
+
 var num2Letras = function num2Letras(numero, signoDecimal, moneda, recursivo) {
   if (numero.length === 0) {
     return "";
@@ -132,11 +134,31 @@ var num2Letras = function num2Letras(numero, signoDecimal, moneda, recursivo) {
   if (result.enteros.indexOf(" ún ") >= 0) {
     result.enteros = result.enteros.replace(/ ún /, " un ");
   }
-  var strResult=result.enteros + " " + moneda + result.decimales;
-  strResult=strResult.replace(/ {2}/g," ")
-  return strResult
+  var strResult = result.enteros + " " + moneda + result.decimales;
+  strResult = strResult.replace(/ {2}/g, " ");
+  return strResult;
 };
-function x(){
-  ///
+function compare(a, b) {
+  // Use toUpperCase() to ignore character casing
+  const item1 = a.cuenta.toUpperCase();
+  const item2 = b.cuenta.toUpperCase();
+
+  let comparison = 0;
+  if (item1 > item2) {
+    comparison = 1;
+  } else if (item1 < item2) {
+    comparison = -1;
+  }
+  let dirección = 2;
+  if (dirección == 1) {
+    return comparison;
+  } else {
+    return comparison;
+  }
 }
-module.exports = { num2Letras: num2Letras,funcionX:x };
+const ordenarPorCuenta = function(matriz) {
+  return matriz.sort(compare);
+};
+
+
+module.exports = { num2Letras: num2Letras, ordenar: ordenarPorCuenta };

@@ -50,9 +50,9 @@
                         .join("/")
                     }}
                   </td>
-                  <td>{{ row.sucursal?row.sucursal.toLowerCase():'' }}</td>
-                  <td>{{ row.fondo?row.fondo.toLowerCase():'' }}</td>
-                  <td>{{ row.sector?row.sector.toLowerCase():'' }}</td>
+                  <td>{{ row.sucursal ? row.sucursal.toLowerCase() : "" }}</td>
+                  <td>{{ row.fondo ? row.fondo.toLowerCase() : "" }}</td>
+                  <td>{{ row.sector ? row.sector.toLowerCase() : "" }}</td>
                   <td>{{ row.número }}</td>
                   <td>{{ row.descripción }}</td>
                 </tr>
@@ -77,7 +77,7 @@
               class="mr-1"
               v-on="on"
               @click="limpiar()"
-              :disabled="data.cerrado==0"
+              :disabled="data.cerrado == 0"
             >
               <v-icon>mdi-plus</v-icon>
             </v-btn>
@@ -94,7 +94,7 @@
               class="mr-1"
               v-on="on"
               @click="guardarComprobante()"
-              :disabled="!totales.ok || data.cerrado>0"
+              :disabled="!totales.ok || data.cerrado > 0"
             >
               <v-icon>mdi-content-save</v-icon>
             </v-btn>
@@ -110,8 +110,8 @@
               color="blue-grey"
               class="mr-1"
               v-on="on"
-              @click="() => {}"
-              :disabled="!totales.ok || data.cerrado>0"
+              @click="generarDetallePropagado()"
+              :disabled="!totales.ok || data.id == 0"
             >
               <v-icon>mdi-printer</v-icon>
             </v-btn>
@@ -128,7 +128,7 @@
               class="mr-1"
               v-on="on"
               @click="() => {}"
-              :disabled="!totales.ok || data.cerrado>0"
+              :disabled="!totales.ok || data.cerrado > 0"
             >
               <v-icon>mdi-sticker-remove</v-icon>
             </v-btn>
@@ -179,7 +179,7 @@
             type="date"
             class="mr-2"
             v-model="data.fecha"
-            :disabled="data.cerrado > 0"
+            disabled
           ></v-text-field>
           <v-select
             label="Tipo de fondo:"
@@ -206,7 +206,6 @@
             class="mr-2"
             v-model="data.fondo"
             :disabled="data.cerrado > 0"
-            
           ></v-select>
           <v-select
             label="Sector:"
@@ -283,7 +282,7 @@
                           color="red"
                           v-on="on"
                           @click="cuentas.splice(i, 1)"
-                          :disabled="data.cerrado>0"
+                          :disabled="data.cerrado > 0"
                         >
                           <v-icon small>mdi-close</v-icon>
                         </v-btn>
@@ -368,18 +367,40 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog width="700" v-model="dlgPreview">
+      <v-card>
+        <v-card-text class="pa-0">
+          <iframe
+            :src="docPdf"
+            frameborder="0"
+            height="600"
+            width="700"
+          ></iframe>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="dlgPreview = false">CERRAR</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script>
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+const util = require("../../utils");
 export default {
   data() {
     return {
       dlgFind: false,
+      dlgPreview: false,
+      docPdf: "",
       find: "",
       data: {
         id: 0,
-        fecha: "",
+        fecha: '',
         tipo_fondo: 1,
         sucursal: 0,
         fondo: 0,
@@ -410,9 +431,14 @@ export default {
         concepto: "",
       },
       cuentas: [],
-      numerosDeComprobantes: [],
-      detallePropagado:[]
+      detallePropagado: [],
+      documento: "",
     };
+  },
+  watch:{
+    fechaactual(){
+      this.data.fecha=this.fechaactual
+    }
   },
   methods: {
     limpiar: function() {
@@ -446,7 +472,7 @@ export default {
               method: "post",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({
-                tabla: "view_detallecomprobante",
+                tabla: "view_suma_detallecomprobante",
                 campos: "*",
                 condición: "id_comprobante=" + r[0].id,
               }),
@@ -526,41 +552,220 @@ export default {
       mv.selectedCta.concepto = "";
     },
     agregarCuenta() {
-      var mv = this;
-      var myObj = Object.assign({}, mv.selectedCta);
-      var myCta = mv.$store.getters.dlookup({
-        tabla: "catálogo",
-        campo: "id",
-        valor: mv.selectedCta.id_cuenta,
+      let mv = this;
+      let myObj = Object.assign({}, mv.selectedCta);
+      let idx = mv.cuentas.findIndex((cta) => {
+        return cta.id_cuenta == mv.selectedCta.id_cuenta;
       });
-      myObj.cuenta = myCta.cuenta;
-      myObj.descripción = myCta.descripción;
-      mv.cuentas.push(myObj);
-      mv.clearSelectedCta();
-      mv.dlg = false;
+      if (idx >= 0) {
+        mv.$swal
+          .fire({
+            icon: "question",
+            title: "Cuenta encontrada",
+            text:
+              "Se ha encontrado esta misma cuenta en el detalle del comprobante.\n¿Desea sumarle la cantidad?",
+            //showConfirmButton:true,
+            showCancelButton: true,
+          })
+          .then((res) => {
+            if (res.value) {
+              mv.cuentas[idx].debe =
+                parseFloat(mv.cuentas[idx].debe) +
+                parseFloat(mv.selectedCta.debe);
+              mv.cuentas[idx].haber =
+                parseFloat(mv.cuentas[idx].haber) +
+                parseFloat(mv.selectedCta.haber);
+            }
+            mv.clearSelectedCta();
+            mv.dlg = false;
+          });
+      } else {
+        let myCta = mv.$store.getters.dlookup({
+          tabla: "catálogo",
+          campo: "id",
+          valor: mv.selectedCta.id_cuenta,
+        });
+        myObj.cuenta = myCta.cuenta;
+        myObj.descripción = myCta.descripción;
+        mv.cuentas.push(myObj);
+        mv.clearSelectedCta();
+        mv.dlg = false;
+      }
     },
-    fechaActual: function() {
-      var result = new Date()
-        .toLocaleDateString()
-        .split("/")
-        .reverse();
-      var m = [];
-      result.forEach((e) => {
-        if (e.length == 1) {
-          m.push(e.padStart(2, "0"));
-        } else {
-          m.push(e);
+    generarDetallePropagado: function() {
+      let mv = this;
+      let result = [];
+      let totales = {
+        cuenta: "",
+        descripción: "TOTALES ===============>",
+        nivel: 3,
+        debe: 0,
+        haber: 0,
+      };
+      mv.cuentas.forEach((cta) => {
+        let sub = cta.cuenta.toString().split("-");
+        for (let i = sub.length; i > 2; i--) {
+          let strL = sub.slice(0, i).join("-");
+          let strR = cta.cuenta
+            .toString()
+            .substr(strL.length, cta.cuenta.length - strL.length);
+          let strNew = strL + strR.replace(/[1-9]/g, "0");
+          let existente = result.findIndex((row) => {
+            return row.cuenta == strNew;
+          });
+          let strCuentaCat = mv.$store.state.catálogo.filter((item) => {
+            return item.cuenta == strNew;
+          })[0];
+          if (strCuentaCat.nivel == 3 || strCuentaCat.nivel == 6) {
+            if (existente < 0) {
+              result.push({
+                // id: strCuentaCat.id,
+                cuenta: strNew,
+                descripción: strCuentaCat.descripción,
+                nivel: strCuentaCat.nivel,
+                debe: parseFloat(cta.debe),
+                haber: parseFloat(cta.haber),
+              });
+            } else {
+              result[existente].debe =
+                parseFloat(result[existente].debe) + parseFloat(cta.debe);
+              result[existente].haber =
+                parseFloat(result[existente].haber) + parseFloat(cta.haber);
+            }
+          }
         }
       });
-      result = m.join("-");
-      //console.log(result)
-      return result;
+      result = util.ordenar(result);
+      result.forEach((r) => {
+        totales.debe += r.nivel == 3 ? parseFloat(r.debe) : 0;
+        totales.haber += r.nivel == 3 ? parseFloat(r.haber) : 0;
+      });
+      result.push(totales);
+      //console.log(result);
+      // return result;
+      mv.generarPdf(result);
     },
-    generarDetallePropagado:function(){
+    generarPdf: function(cuentas) {
+      let mv = this;
+      let doc = new jsPDF({
+        orientation: "portrait",
+        unit: "cm",
+        format: "letter",
+      });
+      let info = mv.$store.state.info[0];
+      //-----------------MEMBRETE-------------------------------------//
+      doc.addImage(mv.$store.state.logo, "PNG", 1.2, 1, 2.5, 2);
+      let nomb = info.nombreinstitucion.split("\\n");
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(nomb[0], 4, 1.5);
+      doc.text(nomb[1], 4, 2);
+      doc.text(info.nombreinstitucion2, 4, 2.5);
+      doc.setFontSize(9);
+      doc.text(`RUC: ${info.ruc}`, 4, 3);
+      doc.setFontSize(14);
+      doc.text("COMPROBANTE DE DIARIO", 4, 3.7);
+      //--------------------CONTENIDO--------------------------------//
+      let linea = 4;
+      doc.setLineWidth(0.01);
+      doc.rect(12.7, 1, 7.4, 2.9);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Comprobante Nº: ${mv.data.número}`, 13, 1.5);
+      doc.text(
+        `Sucursal: ${
+          mv.$store.getters.dlookup({
+            tabla: "sucursales",
+            campo: "value",
+            valor: mv.data.sucursal,
+          }).text
+        }`,
+        13,
+        1.9
+      );
+      doc.text(
+        `Tipo de fondo: ${
+          mv.data.tipo_fondo == 1 ? "PROPIOS" : "ADMINISTRADOS"
+        }`,
+        13,
+        2.3
+      );
+      doc.text(
+        `Nombre del fondo: ${
+          mv.$store.getters.dlookup({
+            tabla: "fondos",
+            campo: "value",
+            valor: mv.data.fondo,
+          }).text
+        }`,
+        13,
+        2.7
+      );
+      doc.setFontSize(10);
 
-    }
+      let thead = [["CUENTA", "DESCRIPCIÓN", "", "PARCIAL", "DEBE", "HABER"]];
+      let tbody = [];
+
+      cuentas.forEach((cta) => {
+        let debe = cta.debe.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        let haber = cta.haber.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        tbody.push([
+          cta.cuenta,
+          cta.descripción,
+          cta.nivel == 6 ? (cta.debe > 0 ? "DE" : "CR") : "",
+          cta.nivel == 6 ? (cta.debe > 0 ? debe : haber) : "",
+          cta.nivel == 3 ? (cta.debe > 0 ? debe : "") : "",
+          cta.nivel == 3 ? (cta.haber > 0 ? haber : "") : "",
+        ]);
+      });
+      doc.autoTable({
+        head: thead,
+        body: tbody,
+        startY: linea,
+        startX: 1,
+        theme: "striped",
+        styles: { fontSize: 9, lineColor: [230, 230, 240], lineWidth: 0.01 },
+        columnStyles: {
+          3: { halign: "right" },
+          4: { halign: "right" },
+          5: { halign: "right" },
+        },
+      });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+
+      let finalY = doc.lastAutoTable.finalY;
+      if (finalY > 24) {
+        doc.addPage();
+      }
+      doc.setDrawColor("#555");
+      doc.line(3, 24.5, 10, 24.5);
+      doc.line(12, 24.5, 19, 24.5);
+      doc.text("Elaborado por:", 3, 25);
+      doc.text("Elaborado por:", 12, 25);
+      //===================PIE DE PÁGINA===========================//
+      for (let i = 1; i < doc.internal.pages.length; i++) {
+        doc.setPage(i);
+        doc.text(
+          "página " + i + " de " + (doc.internal.pages.length - 1).toString(),
+          17,
+          26.7
+        );
+      }
+      mv.docPdf = doc.output("dataurlstring");
+      mv.dlgPreview = true;
+    },
   },
   computed: {
+    fechaactual:function(){
+      return this.$store.state.fecha_trabajo[0].fechaactual.split("T")[0]
+    },
     cuentasDetalle: function() {
       var mv = this;
       return mv.$store.getters.cuentasDetalle();
@@ -589,11 +794,8 @@ export default {
         return { debe: debe, haber: haber, ok: false };
       }
     },
-  },
-  mounted: function() {
-    this.data.fecha = this.fechaActual();
-    //this.getNumsComp()
-  },
+  }
+  
 };
 </script>
 <style>

@@ -17,7 +17,9 @@ export default new Vuex.Store({
       { tabla: "fsucursal", variable: "sucursales" },
       { tabla: "cfondo", variable: "fondos" },
       { tabla: "view_comprobantes", variable: "comprobantes" },
-      {tabla: "cont_enlaces_por_desembolsos",variable:"enlaces_desembolsos"}
+      {tabla: "cont_enlaces_por_desembolsos",variable:"enlaces_desembolsos"},
+      {tabla:"configeneral",variable:"info"},
+      {tabla:'fechatrabajo',variable:'fecha_trabajo'}
     ],
     sucursales: [],
     catálogo: [],
@@ -27,12 +29,15 @@ export default new Vuex.Store({
     enlaces: [],
     comprobantes: [],
     tipos_pago: [],
+    fecha_trabajo:[{fechaactual:'2021-01-01'}],
     comprobanteActual: { id: 0, fecha: "", detalle: [] },
     tipo_fondo: [
       { value: 1, text: "PROPIOS" },
       { value: 2, text: "ADMINISTRADOS" },
     ],
-    enlaces_desembolsos:[]
+    enlaces_desembolsos:[],
+    info:{},
+    logo:''
   },
   mutations: {
     setVariable(state, payload) {
