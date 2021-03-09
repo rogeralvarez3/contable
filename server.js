@@ -5,13 +5,16 @@ const cors = require("cors");
 const path = require("path");
 const db = require("./db");
 const history = require("connect-history-api-fallback");
+const fs = require("fs");
 
 
 app.use(history());
-app.use(express.json());
+app.use(express.json({limit: '100mb'}));
 
 app.use(cors());
 app.use(express.static(path.resolve(__dirname, "dist")));
+app.use(express.static(path.resolve(__dirname, "temp")));
+app.use(express.static(path.resolve(__dirname, "fonts")));
 app.set("port", process.env.port || 3000);
 
 
@@ -22,7 +25,7 @@ app.post("/get", (req, res) => {
     res.send(r);
   });
 });
-app.post("/exeSP",(req,res)=>{
+app.post("/exeSP", (req, res) => {
   var data = req.body;
   console.log(data)
   db.exeSP(data.sp).then((r) => {

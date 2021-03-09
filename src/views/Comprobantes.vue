@@ -36,7 +36,7 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="(row, i) in $store.getters.comprobantes(find)"
+                  v-for="(row, i) in comprobantes"
                   :key="i"
                   @click="getComprobante(row.id)"
                 >
@@ -178,7 +178,7 @@
             label="Fecha:"
             type="date"
             class="mr-2"
-            v-model="data.fecha"
+            v-model="fechaactual"
             disabled
           ></v-text-field>
           <v-select
@@ -400,7 +400,7 @@ export default {
       find: "",
       data: {
         id: 0,
-        fecha: '',
+        fecha: "",
         tipo_fondo: 1,
         sucursal: 0,
         fondo: 0,
@@ -435,10 +435,10 @@ export default {
       documento: "",
     };
   },
-  watch:{
-    fechaactual(){
-      this.data.fecha=this.fechaactual
-    }
+  watch: {
+    fechaactual() {
+      this.data.fecha = this.fechaactual;
+    },
   },
   methods: {
     limpiar: function() {
@@ -501,6 +501,7 @@ export default {
         });
         children.push(myCta);
       });
+      mv.data.fecha=mv.fechaactual
       var data = {
         tabla: "contcomprobantes",
         data: mv.data,
@@ -508,7 +509,6 @@ export default {
         childTable: "contdetallecomprobantes",
         childIdKey: "id_comprobante",
       };
-      //console.log(data)
       fetch(mv.$store.state.api + "/save", {
         method: "post",
         body: JSON.stringify(data),
@@ -554,7 +554,7 @@ export default {
     agregarCuenta() {
       let mv = this;
       let myObj = Object.assign({}, mv.selectedCta);
-      let idx = mv.cuentas.findIndex((cta) => {
+      /*let idx = mv.cuentas.findIndex((cta) => {
         return cta.id_cuenta == mv.selectedCta.id_cuenta;
       });
       if (idx >= 0) {
@@ -579,18 +579,18 @@ export default {
             mv.clearSelectedCta();
             mv.dlg = false;
           });
-      } else {
-        let myCta = mv.$store.getters.dlookup({
-          tabla: "catálogo",
-          campo: "id",
-          valor: mv.selectedCta.id_cuenta,
-        });
-        myObj.cuenta = myCta.cuenta;
-        myObj.descripción = myCta.descripción;
-        mv.cuentas.push(myObj);
-        mv.clearSelectedCta();
-        mv.dlg = false;
-      }
+      } else {*/
+      let myCta = mv.$store.getters.dlookup({
+        tabla: "catálogo",
+        campo: "id",
+        valor: mv.selectedCta.id_cuenta,
+      });
+      myObj.cuenta = myCta.cuenta;
+      myObj.descripción = myCta.descripción;
+      mv.cuentas.push(myObj);
+      mv.clearSelectedCta();
+      mv.dlg = false;
+      //}
     },
     generarDetallePropagado: function() {
       let mv = this;
@@ -763,8 +763,13 @@ export default {
     },
   },
   computed: {
-    fechaactual:function(){
-      return this.$store.state.fecha_trabajo[0].fechaactual.split("T")[0]
+    comprobantes:function(){
+      let mv = this;
+      let result = mv.$store.getters.comprobantes(mv.find).filter(item=>{return item.escheque==0})
+      return result
+    },
+    fechaactual: function() {
+      return this.$store.state.fecha_trabajo[0].fechaactual.split("T")[0];
     },
     cuentasDetalle: function() {
       var mv = this;
@@ -780,7 +785,6 @@ export default {
       });
       if (debe == haber && debe > 0) {
         if (
-          mv.data.fecha.length > 0 &&
           mv.data.sucursal > 0 &&
           mv.data.sector > 0 &&
           mv.data.descripción.length > 0 &&
@@ -794,8 +798,7 @@ export default {
         return { debe: debe, haber: haber, ok: false };
       }
     },
-  }
-  
+  },
 };
 </script>
 <style>

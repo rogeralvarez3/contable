@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-card width="420" class="ma-1">
+    <v-card width="450" class="ma-1">
       <v-card-title
         v-text="situación.text"
         class="blue-grey lighten-5 pt-1 pb-1 text-lowercase"
@@ -35,8 +35,11 @@
                 <v-tooltip top>
                   <template v-slot:activator="{ on }">
                     <span v-on="on">{{
-                      value2text("id", showLink(pago.value, 0).text, "catálogo")
-                        .cuenta
+                      value2text(
+                        "id",
+                        showLink(pago.value, 0).text,
+                        "catálogo"
+                      ).cuenta
                     }}</span>
                   </template>
                   <span>{{
@@ -50,7 +53,6 @@
                   selected.id = showLink(pago.value, 0).value;
                   selected.id_pago = pago.value;
                   selected.mov = 'id_cuenta_haber';
-
                   dlg = true;
                 "
                 class="clickeable"
@@ -58,8 +60,11 @@
                 <v-tooltip top>
                   <template v-slot:activator="{ on }">
                     <span v-on="on">{{
-                      value2text("id", showLink(pago.value, 1).text, "catálogo")
-                        .cuenta
+                      value2text(
+                        "id",
+                        showLink(pago.value, 1).text,
+                        "catálogo"
+                      ).cuenta
                     }}</span>
                   </template>
                   <span>{{
@@ -73,7 +78,7 @@
         </v-simple-table>
       </v-card-text>
     </v-card>
-    <v-dialog width="600" v-model="dlg">
+    <v-dialog width="620" v-model="dlg">
       <v-card>
         <v-card-title>
           <v-text-field
@@ -141,7 +146,7 @@ export default {
       var mv = this;
       mv.$store.commit("setCargando", true);
       var data = {
-        tabla: "cont_integracion",
+        tabla: "cont_enlaces_cartera",
         data: {
           id: mv.selected.id ? mv.selected.id : 0,
           clasificación: mv.clasificación,
@@ -166,7 +171,7 @@ export default {
         .then((r) => {
           console.log(r);
           mv.$store.dispatch("getData", {
-            tabla: "cont_integracion",
+            tabla: "cont_enlaces_cartera",
             variable: "enlaces",
           });
           mv.$store.commit("setCargando", false);

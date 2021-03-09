@@ -12,14 +12,21 @@ export default new Vuex.Store({
       { tabla: "cont_catalogo", variable: "catálogo" },
       { tabla: "csituacion", variable: "situaciones" },
       { tabla: "csector", variable: "sectores" },
-      { tabla: "cont_integracion", variable: "enlaces" },
+      { tabla: "cont_enlaces_cartera", variable: "enlaces" },
+      { tabla: "cont_enlaces_ahorro", variable: "enlaces_ahorro" },
       { tabla: "ctipos_pago", variable: "tipos_pago" },
       { tabla: "fsucursal", variable: "sucursales" },
       { tabla: "cfondo", variable: "fondos" },
       { tabla: "view_comprobantes", variable: "comprobantes" },
-      {tabla: "cont_enlaces_por_desembolsos",variable:"enlaces_desembolsos"},
-      {tabla:"configeneral",variable:"info"},
-      {tabla:'fechatrabajo',variable:'fecha_trabajo'}
+      {
+        tabla: "cont_enlaces_por_desembolsos",
+        variable: "enlaces_desembolsos",
+      },
+      { tabla: "configeneral", variable: "info" },
+      { tabla: "fechatrabajo", variable: "fecha_trabajo" },
+      { tabla: "atipocuenta", variable: "tiposcuenta" },
+      { tabla: "atipos_mov_cuentas", variable: "tiposmovcuentas" },
+      {tabla:'bancos',variable:'bancos'}
     ],
     sucursales: [],
     catálogo: [],
@@ -27,24 +34,32 @@ export default new Vuex.Store({
     fondos: [],
     sectores: [],
     enlaces: [],
+    enlaces_ahorro: [],
     comprobantes: [],
     tipos_pago: [],
-    fecha_trabajo:[{fechaactual:'2021-01-01'}],
+    tiposcuenta: [],
+    bancos:[],
+    tiposmovcuentas: [],
+    fecha_trabajo: [{ fechaactual: "2021-01-01" }],
     comprobanteActual: { id: 0, fecha: "", detalle: [] },
     tipo_fondo: [
       { value: 1, text: "PROPIOS" },
       { value: 2, text: "ADMINISTRADOS" },
     ],
-    enlaces_desembolsos:[],
-    info:{},
-    logo:''
+    enlaces_desembolsos: [],
+    info: {},
+    logo: "",
   },
   mutations: {
     setVariable(state, payload) {
-      state[payload.variable] = payload.data;
+      //state[payload.variable] = payload.data;
+      // eslint-disable-next-line no-debugger
+      //debugger
+      Vue.set(state, payload.variable, payload.data);
     },
     setCargando(state, payload) {
-      state.cargando = payload;
+      //state.cargando = payload;
+      Vue.set(state, "cargando", payload);
     },
   },
   actions: {
@@ -109,8 +124,7 @@ export default new Vuex.Store({
         }
       } else {
         result = state.catálogo.filter((cta) => {
-          cta.fullText =
-              cta.cuenta.replace(/-/g, "") + " - " + cta.descripción;
+          cta.fullText = cta.cuenta.replace(/-/g, "") + " - " + cta.descripción;
           return cta.tipo == 2;
         });
       }
@@ -133,12 +147,24 @@ export default new Vuex.Store({
       return state.comprobantes.filter((item) => {
         var cad = "";
         Object.keys(item).forEach((k) => {
-          var date = item[k].toString().split("T")
-          if(date[0].length==10){cad+=date[0].split("-").reverse().join("/")+" "}
-          else{cad += item[k].toString() + " "}
+          var date = item[k].toString().split("T");
+          if (date[0].length == 10) {
+            cad +=
+              date[0]
+                .split("-")
+                .reverse()
+                .join("/") + " ";
+          } else {
+            cad += item[k].toString() + " ";
+          }
         });
-        console.log(cad)
-        return cad.toLowerCase().trim().indexOf(texto.toLowerCase()) >= 0;
+        console.log(cad);
+        return (
+          cad
+            .toLowerCase()
+            .trim()
+            .indexOf(texto.toLowerCase()) >= 0
+        );
       });
     },
   },

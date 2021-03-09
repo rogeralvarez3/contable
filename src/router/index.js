@@ -2,7 +2,8 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import Catálogo from "../views/Catalogo.vue";
 import Comprobantes from "../views/Comprobantes.vue";
-import Enlaces from "../views/Enlaces.vue";
+import enlaces_cartera from "../views/enlaces_cartera.vue";
+import enlaces_ahorro from "../views/enlaces_ahorro.vue";
 import Cheques from "../views/Cheques.vue"
 import Depositos from "../views/Depositos.vue"
 import Reportes from "../views/Reportes.vue"
@@ -36,9 +37,14 @@ const routes = [
     component: Reportes,
   },
   {
-    path: "/enlaces",
-    name: "enlaces",
-    component: Enlaces,
+    path: "/enlaces_cartera",
+    name: "enlaces_cartera",
+    component: enlaces_cartera,
+  },
+  {
+    path: "/enlaces_ahorro",
+    name: "enlaces_ahorro",
+    component: enlaces_ahorro,
   },
   {
     path: "/about",

@@ -11,7 +11,7 @@
                 dlgCuentas = true;
               "
             >
-              {{ showLink(item) }}
+              {{ showLink(item).replace(/-/g,'') }}
             </td>
           </tr>
         </table>

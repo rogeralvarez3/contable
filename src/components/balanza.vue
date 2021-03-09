@@ -1,15 +1,7 @@
 <template>
   <v-app>
     <v-layout row>
-      <v-btn
-        fab
-        absolute
-        top
-        right
-        @click="
-          generarPdf();
-          dlg = true;
-        "
+      <v-btn fab absolute top right @click="generarPdf()"
         ><v-icon>mdi-printer</v-icon></v-btn
       >
       <v-flex>
@@ -50,11 +42,6 @@
               :items="fondos"
               v-model="rpt.fondo"
               v-else
-            ></v-select>
-            <v-select
-              label="Sector"
-              :items="$store.state.sectores"
-              v-model="rpt.sector"
             ></v-select> </v-flex
           ><v-spacer></v-spacer>
           <v-flex>
@@ -72,7 +59,7 @@
             <v-btn @click="generarBalanza()">Generar</v-btn>
           </v-flex>
         </v-layout>
-        <table id="tabla">
+        <table id="tabla" v-if="balanza.length>0">
           <thead class="font-weight-black">
             <tr>
               <td rowspan="2">CUENTA</td>
@@ -125,7 +112,15 @@
       <v-card>
         <v-card-title class="grey lighten-4 pa-0 pl2"
           >Balanza de comprobación <v-spacer></v-spacer
-          ><v-btn small fab dark color="error" @click="dlg = false"
+          ><v-btn
+            small
+            fab
+            dark
+            color="error"
+            @click="
+              dlg = false;
+              rpt.doc = '';
+            "
             ><v-icon small>mdi-close</v-icon></v-btn
           ></v-card-title
         >
@@ -168,26 +163,51 @@ export default {
     };
   },
   methods: {
-    generarPdf: function() {
+    generarPdf: async function () {
       let mv = this;
+      mv.$store.commit("setCargando", true);
+
       let doc = new jsPDF({
         orientation: "landscape",
         unit: "cm",
         format: [22, 28],
       });
-      doc.addImage(mv.$store.state.logo, "JPEG", 1, 1, 1, 1);
-      doc.setFontSize(16);
-      doc.setFont("courier", "bold");
+      let fetchResult = await fetch(`${mv.$store.state.api}/segoeUi.txt`)
+        .then((file) => {
+          return file.text();
+        })
+        .then((res) => {
+          return res;
+        });
+      let segoeUi = await fetchResult;
+      fetchResult = await fetch(`${mv.$store.state.api}/seguibl.txt`)
+        .then((file) => {
+          return file.text();
+        })
+        .then((res) => {
+          return res;
+        });
+      let seguiBl = await fetchResult;
+
+      doc.addImage(mv.$store.state.logo, "PNG", 1, 1, 1, 1);
+      doc.addFileToVFS("seguibl.ttf", seguiBl);
+      doc.addFont("seguibl.ttf", "seguiBl", "bold");
+      doc.addFileToVFS("segoeui.ttf", segoeUi);
+      doc.addFont("segoeui.ttf", "segoeUi", "normal");
+      doc.setFont("seguiBl", "bold");
       doc.text(mv.title, 2.5, 1.8);
       doc.setLineWidth(0.01);
       doc.line(1, 2.3, 27, 2.3);
+      //doc.setFontSize(8)
       doc.autoTable({
         html: "#tabla",
         showHead: "everyPage",
-        headStyles: { fillColor: "#eee", textColor: "black" },
+        headStyles: { fillColor: "#eee", textColor: "black", font: "seguiBl" },
         startY: 2.5,
+        styles: { font: "segoeUi", fontSize: 8 },
       });
-      doc.setFont("helvetica", "normal");
+
+      doc.setFont("segoeUi", "normal");
       doc.setFontSize(10);
       for (let i = 1; i < doc.internal.pages.length; i++) {
         doc.setPage(i);
@@ -197,16 +217,19 @@ export default {
           21
         );
       }
-      let uri = doc.output("datauristring");
-      //console.log(uri);
-      mv.rpt.doc = uri;
+      var blobPDF = doc.output("blob");
+      var blobUrl = URL.createObjectURL(blobPDF);
+      mv.$store.commit("setCargando", false);
+      mv.dlg = true;
+      mv.rpt.doc = blobUrl;
     },
-    generarBalanza: function() {
+    generarBalanza: function () {
       let mv = this;
-      let params = `'${mv.rpt.período}',${mv.rpt.sucursal},${mv.rpt.tipoFondo},${mv.rpt.fondo},${mv.rpt.sector}`;
+      mv.$store.commit("setCargando", true);
+      let params = `'${mv.rpt.período}',${mv.rpt.sucursal},${mv.rpt.tipoFondo},${mv.rpt.fondo}`;
       let data = JSON.stringify({ sp: `balanza(${params})` });
       // eslint-disable-next-line no-debugger
-      debugger;
+
       fetch(`${mv.$store.state.api}/exeSP`, {
         method: "post",
         body: data,
@@ -216,6 +239,7 @@ export default {
           return json.json();
         })
         .then((res) => {
+          mv.$store.commit("setCargando", false);
           if (res.length > 1) {
             mv.balanza = res[0];
           }
@@ -223,13 +247,13 @@ export default {
     },
   },
   computed: {
-    sucursales: function() {
+    sucursales: function () {
       let mv = this;
       let lista = Object.assign([], mv.$store.state.sucursales);
       lista.push({ value: lista[lista.length], text: "TODAS" });
       return lista;
     },
-    fondos: function() {
+    fondos: function () {
       let mv = this;
       let lista = Object.assign([], mv.$store.state.fondos).filter((item) => {
         return item.tipo == 2;
@@ -239,7 +263,7 @@ export default {
       return lista;
     },
   },
-  mounted: function() {
+  mounted: function () {
     let mv = this;
     let now = new Date();
     mv.rpt.período =

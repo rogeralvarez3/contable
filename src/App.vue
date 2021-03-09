@@ -72,13 +72,19 @@ var mv = {
         },
       },
       {
-        text: "Enlazar cuentas de cartera",
+        text: "Integración cartera",
         icon: "mdi-link",
         action: function() {
-          Router.push("/enlaces").catch(() => {});
+          Router.push("/enlaces_cartera").catch(() => {});
         },
       },
-
+{
+        text: "Integración ahorro",
+        icon: "mdi-link",
+        action: function() {
+          Router.push("/enlaces_ahorro").catch(() => {});
+        },
+      },
       {
         text: "Comprobantes",
         icon: "mdi-note",
@@ -118,7 +124,7 @@ var mv = {
   }),
   methods: {
     getLogo: function() {
-      fetch(`${Store.state.api}/img/logo.png`)
+      fetch(`${Store.state.api}/img/logo.jpg`)
         .then((response) => {
           return response.blob();
         })
@@ -229,5 +235,8 @@ body {
 .theme--dark.v-btn.v-btn--disabled:not(.v-btn--flat):not(.v-btn--text):not(.v-btn--outlined) {
   color: white;
   text-shadow: 1px 0 1px #aaa !important;
+}
+table thead tr th {
+  background: none !important;
 }
 </style>
