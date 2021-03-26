@@ -69,7 +69,7 @@
                             "
                             >{{
                               id2Cuenta(getEnlace(item.id).id_cuenta_debe)
-                                .cuenta
+                                .cuenta.replace(/-/g,'')
                             }}</v-btn
                           > </template
                         ><span>
@@ -93,7 +93,7 @@
                             "
                             >{{
                               id2Cuenta(getEnlace(item.id).id_cuenta_haber)
-                                .cuenta
+                                .cuenta.replace(/-/g,'')
                             }}</v-btn
                           > </template
                         ><span>

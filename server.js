@@ -5,11 +5,11 @@ const cors = require("cors");
 const path = require("path");
 const db = require("./db");
 const history = require("connect-history-api-fallback");
-const fs = require("fs");
+const io = require("socket.io");
 
 
 app.use(history());
-app.use(express.json({limit: '100mb'}));
+app.use(express.json({ limit: '100mb' }));
 
 app.use(cors());
 app.use(express.static(path.resolve(__dirname, "dist")));
@@ -40,6 +40,16 @@ app.post("/save", (req, res) => {
   });
 });
 
-app.listen(app.get("port"), (server) => {
+let httpServer = app.listen(app.get("port"), () => {
   console.info(`Server listen on port ${app.get("port")}`);
 });
+let sockets = io(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+sockets.on("connection", sck => {
+  console.log('cliente conectado');
+})

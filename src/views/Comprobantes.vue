@@ -29,7 +29,6 @@
                   <th>Fecha</th>
                   <th>Sucursal</th>
                   <th>Fondo</th>
-                  <th>Sector</th>
                   <th>Número</th>
                   <th>Descripción</th>
                 </tr>
@@ -42,17 +41,10 @@
                 >
                   <td>{{ row.id }}</td>
                   <td>
-                    {{
-                      row.fecha
-                        .split("T")[0]
-                        .split("-")
-                        .reverse()
-                        .join("/")
-                    }}
+                    {{ row.fecha.split("T")[0].split("-").reverse().join("/") }}
                   </td>
                   <td>{{ row.sucursal ? row.sucursal.toLowerCase() : "" }}</td>
                   <td>{{ row.fondo ? row.fondo.toLowerCase() : "" }}</td>
-                  <td>{{ row.sector ? row.sector.toLowerCase() : "" }}</td>
                   <td>{{ row.número }}</td>
                   <td>{{ row.descripción }}</td>
                 </tr>
@@ -206,20 +198,26 @@
             class="mr-2"
             v-model="data.fondo"
             :disabled="data.cerrado > 0"
+            v-if="data.tipo_fondo>1"
           ></v-select>
-          <v-select
-            label="Sector:"
-            :items="$store.state.sectores"
+          <div width="200">
+             <v-text-field
+            label="Número de comprobante:"
             class="mr-2"
-            v-model="data.sector"
-            :disabled="data.cerrado > 0"
-          ></v-select>
-          <v-text-field
-            label="Número de asiento:"
-            class="mr-2"
-            v-model="data.número"
-            :disabled="data.cerrado > 0"
+            v-model="data.consecutivo"
+            disabled
+            
           ></v-text-field>
+          </div>
+          <div width="200">
+             <v-text-field
+            label="Referencia:"
+            class="mr-2"
+            v-model="data.referencia"
+            :disabled="data.cerrado > 0"
+            
+          ></v-text-field>
+          </div>
           <v-text-field
             label="Descripción:"
             class="mr-2"
@@ -267,10 +265,24 @@
                   <td>{{ cta.cuenta }}</td>
                   <td>{{ cta.descripción }}</td>
                   <td class="text-right">
-                    {{ cta.debe ? parseFloat(cta.debe).toFixed(2) : "0.00" }}
+                    {{
+                      cta.debe
+                        ? new Intl.NumberFormat("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(cta.debe)
+                        : "0.00"
+                    }}
                   </td>
                   <td class="text-right">
-                    {{ cta.haber ? parseFloat(cta.haber).toFixed(2) : "0.00" }}
+                    {{
+                      cta.haber
+                        ? new Intl.NumberFormat("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(cta.haber)
+                        : "0.00"
+                    }}
                   </td>
                   <td>
                     <v-tooltip top>
@@ -360,7 +372,7 @@
             @click="agregarCuenta()"
             :disabled="
               (selectedCta.debe <= 0 && selectedCta.haber <= 0) ||
-                selectedCta.id_cuenta == 0
+              selectedCta.id_cuenta == 0
             "
           />
           <v-spacer />
@@ -404,8 +416,8 @@ export default {
         tipo_fondo: 1,
         sucursal: 0,
         fondo: 0,
-        sector: 0,
-        número: "",
+        consecutivo: null,
+        referencia:"",
         descripción: "",
         cerrado: 0,
       },
@@ -415,8 +427,8 @@ export default {
         tipo_fondo: 1,
         sucursal: 0,
         fondo: 0,
-        sector: 0,
-        número: "",
+        consecutivo: null,
+        referencia:"",
         descripción: "",
         cerrado: 0,
       },
@@ -441,7 +453,7 @@ export default {
     },
   },
   methods: {
-    limpiar: function() {
+    limpiar: function () {
       let mv = this;
       mv.data = Object.assign({}, mv.dataInit);
       mv.cuentas = [];
@@ -501,7 +513,7 @@ export default {
         });
         children.push(myCta);
       });
-      mv.data.fecha=mv.fechaactual
+      mv.data.fecha = mv.fechaactual;
       var data = {
         tabla: "contcomprobantes",
         data: mv.data,
@@ -592,7 +604,7 @@ export default {
       mv.dlg = false;
       //}
     },
-    generarDetallePropagado: function() {
+    generarDetallePropagado: function () {
       let mv = this;
       let result = [];
       let totales = {
@@ -640,12 +652,31 @@ export default {
         totales.debe += r.nivel == 3 ? parseFloat(r.debe) : 0;
         totales.haber += r.nivel == 3 ? parseFloat(r.haber) : 0;
       });
-      result.push(totales);
+      //result.push(totales);
       //console.log(result);
       // return result;
-      mv.generarPdf(result);
+      let tfoot = [
+        [
+          { content: "TOTALES", colSpan: 4, styles: { halign: "center" } },
+          {
+            content: new Intl.NumberFormat("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(totales.debe),
+            styles: { halign: "right" },
+          },
+          {
+            content: new Intl.NumberFormat("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(totales.haber),
+            styles: { halign: "right" },
+          },
+        ],
+      ];
+      mv.generarPdf(result,tfoot);
     },
-    generarPdf: function(cuentas) {
+    generarPdf: function (cuentas,tfoot) {
       let mv = this;
       let doc = new jsPDF({
         orientation: "portrait",
@@ -703,7 +734,7 @@ export default {
       );
       doc.setFontSize(10);
 
-      let thead = [["CUENTA", "DESCRIPCIÓN", "", "PARCIAL", "DEBE", "HABER"]];
+      let thead = [["CUENTA", "DESCRIPCIÓN", "", {content:"PARCIAL",styles:{halign:"right"}}, {content:"DEBE",styles:{halign:"right"}}, {content:"HABER",styles:{halign:"right"}}]];
       let tbody = [];
 
       cuentas.forEach((cta) => {
@@ -727,14 +758,48 @@ export default {
       doc.autoTable({
         head: thead,
         body: tbody,
+        foot:tfoot,
         startY: linea,
         startX: 1,
-        theme: "striped",
-        styles: { fontSize: 9, lineColor: [230, 230, 240], lineWidth: 0.01 },
+        theme: "plain",
+        styles: { fontSize: 9},
         columnStyles: {
           3: { halign: "right" },
           4: { halign: "right" },
           5: { halign: "right" },
+        },
+        willDrawCell: function (data) {
+          if (data.section == "head") {
+            let lineWidth = 0.0;
+            Object.values(data.row.cells).forEach((item) => {
+              lineWidth += item.width;
+            });
+            data.doc.setLineWidth(0.01);
+            data.doc.line(
+              data.row.cells[0].x,
+              data.row.cells[0].y + data.row.cells[0].height,
+              lineWidth + data.row.cells[0].x,
+              data.row.cells[0].y + data.row.cells[0].height
+            );
+          } else if (data.section == "foot") {
+            let lineWidth = 0.0;
+            Object.values(data.row.cells).forEach((item) => {
+              lineWidth += item.width;
+            });
+            data.doc.setLineWidth(0.01);
+            data.doc.line(
+              data.row.cells[0].x,
+              data.row.cells[0].y,
+              lineWidth + data.row.cells[0].x,
+              data.row.cells[0].y
+            );
+             data.doc.line(
+              data.row.cells[0].x,
+              data.row.cells[0].y + data.row.cells[0].height,
+              lineWidth + data.row.cells[0].x,
+              data.row.cells[0].y + data.row.cells[0].height
+            );
+          }
         },
       });
       doc.setFont("helvetica", "normal");
@@ -763,19 +828,21 @@ export default {
     },
   },
   computed: {
-    comprobantes:function(){
+    comprobantes: function () {
       let mv = this;
-      let result = mv.$store.getters.comprobantes(mv.find).filter(item=>{return item.escheque==0})
-      return result
+      let result = mv.$store.getters.comprobantes(mv.find).filter((item) => {
+        return item.escheque == 0;
+      });
+      return result;
     },
-    fechaactual: function() {
+    fechaactual: function () {
       return this.$store.state.fecha_trabajo[0].fechaactual.split("T")[0];
     },
-    cuentasDetalle: function() {
+    cuentasDetalle: function () {
       var mv = this;
       return mv.$store.getters.cuentasDetalle();
     },
-    totales: function() {
+    totales: function () {
       var mv = this;
       var debe = 0;
       var haber = 0;
@@ -786,7 +853,6 @@ export default {
       if (debe == haber && debe > 0) {
         if (
           mv.data.sucursal > 0 &&
-          mv.data.sector > 0 &&
           mv.data.descripción.length > 0 &&
           mv.data.fondo > 0
         ) {

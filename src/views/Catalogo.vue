@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-card>
+    <v-card width="800">
       <v-card-title class="pt-2 pb-2">
         <v-icon class="mr-1">mdi-book</v-icon>Catálogo de cuentas
         <v-text-field
@@ -21,7 +21,7 @@
       </v-card-title>
       <v-divider></v-divider>
       <v-card-text>
-        <v-simple-table dense>
+        <v-simple-table dense height="600">
           <thead>
             <tr>
               <th v-text="'cuenta'" />

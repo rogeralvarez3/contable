@@ -39,7 +39,7 @@
                         "id",
                         showLink(pago.value, 0).text,
                         "catálogo"
-                      ).cuenta
+                      ).cuenta.replace(/-/g,'')
                     }}</span>
                   </template>
                   <span>{{
@@ -64,7 +64,7 @@
                         "id",
                         showLink(pago.value, 1).text,
                         "catálogo"
-                      ).cuenta
+                      ).cuenta.replace(/-/g,'')
                     }}</span>
                   </template>
                   <span>{{

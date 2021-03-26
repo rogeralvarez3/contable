@@ -29,7 +29,6 @@
                   <th>Fecha</th>
                   <th>Sucursal</th>
                   <th>Fondo</th>
-                  <th>Sector</th>
                   <th>Número</th>
                   <th>Descripción</th>
                 </tr>
@@ -42,17 +41,10 @@
                 >
                   <td>{{ row.id }}</td>
                   <td>
-                    {{
-                      row.fecha
-                        .split("T")[0]
-                        .split("-")
-                        .reverse()
-                        .join("/")
-                    }}
+                    {{ row.fecha.split("T")[0].split("-").reverse().join("/") }}
                   </td>
                   <td>{{ row.sucursal ? row.sucursal.toLowerCase() : "" }}</td>
                   <td>{{ row.fondo ? row.fondo.toLowerCase() : "" }}</td>
-                  <td>{{ row.sector ? row.sector.toLowerCase() : "" }}</td>
                   <td>{{ row.número }}</td>
                   <td>{{ row.descripción }}</td>
                 </tr>
@@ -206,14 +198,12 @@
             class="mr-2"
             v-model="data.fondo"
             :disabled="data.cerrado > 0"
+            v-if="data.tipo_fondo > 1"
           ></v-select>
-          <v-select
-            label="Sector:"
-            :items="$store.state.sectores"
-            class="mr-2"
-            v-model="data.sector"
-            :disabled="data.cerrado > 0"
-          ></v-select>
+          <div width="100" class="mr-1">
+            <v-text-field label="Número de cheque" v-model="data.consecutivo" disabled></v-text-field>
+          </div>
+          
           <v-text-field
             label="A nombre de:"
             class="mr-2"
@@ -261,10 +251,24 @@
                   <td>{{ cta.cuenta }}</td>
                   <td>{{ cta.descripción }}</td>
                   <td class="text-right">
-                    {{ cta.debe ? parseFloat(cta.debe).toFixed(2) : "0.00" }}
+                    {{
+                      cta.debe
+                        ? new Intl.NumberFormat("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(cta.debe)
+                        : "0.00"
+                    }}
                   </td>
                   <td class="text-right">
-                    {{ cta.haber ? parseFloat(cta.haber).toFixed(2) : "0.00" }}
+                    {{
+                      cta.haber
+                        ? new Intl.NumberFormat("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(cta.haber)
+                        : "0.00"
+                    }}
                   </td>
                   <td>
                     <v-tooltip top>
@@ -325,11 +329,14 @@
               item-text="fullText"
               v-model="selectedCta.id_cuenta"
             />
-            <v-checkbox v-model="selectedCta.cuentaDeBanco" label="Es cuenta de banco"></v-checkbox>
-            
+            <v-checkbox
+              v-model="selectedCta.cuentaDeBanco"
+              label="Es cuenta de banco"
+            ></v-checkbox>
+
             <v-layout row>
               <v-text-field
-              v-if="!selectedCta.cuentaDeBanco"
+                v-if="!selectedCta.cuentaDeBanco"
                 label="Debe:"
                 class="mr-2 numero"
                 v-model="selectedCta.debe"
@@ -352,7 +359,7 @@
             @click="agregarCuenta()"
             :disabled="
               (selectedCta.debe <= 0 && selectedCta.haber <= 0) ||
-                selectedCta.id_cuenta == 0
+              selectedCta.id_cuenta == 0
             "
           />
           <v-spacer />
@@ -396,7 +403,6 @@ export default {
         tipo_fondo: 1,
         sucursal: 0,
         fondo: 0,
-        sector: 0,
         número: "",
         descripción: "",
         cerrado: 0,
@@ -407,7 +413,6 @@ export default {
         tipo_fondo: 1,
         sucursal: 0,
         fondo: 0,
-        sector: 0,
         número: "",
         descripción: "",
         cerrado: 0,
@@ -421,7 +426,7 @@ export default {
         debe: 0,
         haber: 0,
         concepto: "",
-        cuentaDeBanco:false
+        cuentaDeBanco: false,
       },
       cuentas: [],
       detallePropagado: [],
@@ -434,7 +439,7 @@ export default {
     },
   },
   methods: {
-    limpiar: function() {
+    limpiar: function () {
       let mv = this;
       mv.data = Object.assign({}, mv.dataInit);
       mv.cuentas = [];
@@ -494,7 +499,7 @@ export default {
         });
         children.push(myCta);
       });
-      mv.data.fecha = mv.fechaactual
+      mv.data.fecha = mv.fechaactual;
       var data = {
         tabla: "contcomprobantes",
         data: mv.data,
@@ -585,7 +590,7 @@ export default {
       mv.dlg = false;
       //}
     },
-    generarDetallePropagado: function() {
+    generarDetallePropagado: function () {
       let mv = this;
       let result = [];
       let totales = {
@@ -595,6 +600,7 @@ export default {
         debe: 0,
         haber: 0,
       };
+      let tfoot = ["TOTALES", 0.0, 0.0];
       mv.cuentas.forEach((cta) => {
         let sub = cta.cuenta.toString().split("-");
         for (let i = sub.length; i > 2; i--) {
@@ -629,16 +635,38 @@ export default {
         }
       });
       result = util.ordenar(result);
+      result.forEach(item=>{
+        item.cuenta=item.cuenta.replace(/-/g,'')
+      })
       result.forEach((r) => {
         totales.debe += r.nivel == 3 ? parseFloat(r.debe) : 0;
         totales.haber += r.nivel == 3 ? parseFloat(r.haber) : 0;
       });
-      result.push(totales);
+      tfoot = [
+        [
+          { content: "TOTALES", colSpan: 4,styles:{halign:"center"} },
+          {
+            content: new Intl.NumberFormat("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(totales.debe),
+            styles: { halign: "right" },
+          },
+          {
+            content: new Intl.NumberFormat("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(totales.haber),
+            styles: { halign: "right" },
+          },
+        ],
+      ];
+      //result.push(totales);
       //console.log(result);
       // return result;
-      mv.generarPdf(result);
+      mv.generarPdf(result, tfoot);
     },
-    generarPdf: function(cuentas) {
+    generarPdf: function (cuentas, tfoot) {
       let mv = this;
       let doc = new jsPDF({
         orientation: "portrait",
@@ -648,11 +676,13 @@ export default {
       let info = mv.$store.state.info[0];
       //-----------------MEMBRETE-------------------------------------//
       doc.addImage(mv.$store.state.logo, "PNG", 1.2, 1, 2.5, 2);
-      let nomb = info.nombreinstitucion.split("\\n");
+      let nomb = info.nombreinstitucion.split(" ");
+      let nomb1 = nomb[0] + " " + nomb[1] + " " + nomb[2];
+      let nomb2 = nomb[3] + " " + nomb[4] + " " + nomb[5];
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text(nomb[0], 4, 1.5);
-      doc.text(nomb[1], 4, 2);
+      doc.text(nomb1, 4, 1.5);
+      doc.text(nomb2, 4, 2);
       doc.text(info.nombreinstitucion2, 4, 2.5);
       doc.setFontSize(9);
       doc.text(`RUC: ${info.ruc}`, 4, 3);
@@ -664,7 +694,7 @@ export default {
       doc.rect(12.7, 1, 7.4, 2.9);
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      doc.text(`Comprobante Nº: ${mv.data.número}`, 13, 1.5);
+      doc.text(`Cheque Nº: ${mv.data.número}`, 13, 1.5);
       doc.text(
         `Sucursal: ${
           mv.$store.getters.dlookup({
@@ -696,7 +726,16 @@ export default {
       );
       doc.setFontSize(10);
 
-      let thead = [["CUENTA", "DESCRIPCIÓN", "", "PARCIAL", "DEBE", "HABER"]];
+      let thead = [
+        [
+          "CUENTA",
+          "DESCRIPCIÓN",
+          "",
+          {content:"PARCIAL",styles:{halign:"right"}},
+          { content: "DEBE", styles: { halign: "right" } },
+          { content: "HABER", styles: { halign: "right" } },
+        ],
+      ];
       let tbody = [];
 
       cuentas.forEach((cta) => {
@@ -717,22 +756,63 @@ export default {
           cta.nivel == 3 ? (cta.haber > 0 ? haber : "") : "",
         ]);
       });
-      linea+=4
-      doc.text(mv.data.descripción,6,linea)
-      linea+=0.8
-      doc.text(mv.cantidadEnLetras,6,linea)
-      linea+=6
+      linea += 2;
+      doc.setFontSize(6);
+      doc.text(mv.$store.state.sucursales[0].text, 14, linea);
+      let miFecha = mv.data.fecha.split("-");
+      doc.text(`${miFecha[2]}    ${miFecha[1]}    ${miFecha[0]}`, 17, linea);
+      doc.setFontSize(10);
+      linea += 1;
+      doc.text(mv.data.descripción, 6, linea);
+      doc.text(mv.cantidadEnLetras[1], 14, linea);
+      linea += 0.8;
+      doc.text(mv.cantidadEnLetras[0], 6, linea);
+      linea += 3;
       doc.autoTable({
         head: thead,
         body: tbody,
+        foot: tfoot,
         startY: linea,
         startX: 1,
-        theme: "striped",
-        styles: { fontSize: 9, lineColor: [230, 230, 240], lineWidth: 0.01 },
+        theme: "plain",
+        styles: { fontSize: 9 },
         columnStyles: {
           3: { halign: "right" },
           4: { halign: "right" },
           5: { halign: "right" },
+        },
+        willDrawCell: function (data) {
+          if (data.section == "head") {
+            let lineWidth = 0.0;
+            Object.values(data.row.cells).forEach((item) => {
+              lineWidth += item.width;
+            });
+            data.doc.setLineWidth(0.01);
+            data.doc.line(
+              data.row.cells[0].x,
+              data.row.cells[0].y + data.row.cells[0].height,
+              lineWidth + data.row.cells[0].x,
+              data.row.cells[0].y + data.row.cells[0].height
+            );
+          } else if (data.section == "foot") {
+            let lineWidth = 0.0;
+            Object.values(data.row.cells).forEach((item) => {
+              lineWidth += item.width;
+            });
+            data.doc.setLineWidth(0.01);
+            data.doc.line(
+              data.row.cells[0].x,
+              data.row.cells[0].y,
+              lineWidth + data.row.cells[0].x,
+              data.row.cells[0].y
+            );
+             data.doc.line(
+              data.row.cells[0].x,
+              data.row.cells[0].y + data.row.cells[0].height,
+              lineWidth + data.row.cells[0].x,
+              data.row.cells[0].y + data.row.cells[0].height
+            );
+          }
         },
       });
       doc.setFont("helvetica", "normal");
@@ -761,29 +841,38 @@ export default {
     },
   },
   computed: {
-    cantidadEnLetras:function(){
+    cantidadEnLetras: function () {
       let mv = this;
-      let result =""
-      mv.cuentas.forEach(item=>{
-        let idx = mv.$store.state.bancos.findIndex(b=>{return item.descripción.indexOf(b.nombre)>=0})
+      let result = [];
+      mv.cuentas.forEach((item) => {
+        let idx = mv.$store.state.bancos.findIndex((b) => {
+          return item.descripción.indexOf(b.nombre) >= 0;
+        });
 
-        if(idx>=0){result=util.num2Letras(item.haber,'.','córdobas')}
-      })
-      return result
+        if (idx >= 0) {
+          result = [
+            util.num2Letras(item.haber, ".", "córdobas"),
+            "C$ " + new Intl.NumberFormat("en-US").format(item.haber),
+          ];
+        }
+      });
+      return result;
     },
-    comprobantes:function(){
+    comprobantes: function () {
       let mv = this;
-      let result = mv.$store.getters.comprobantes(mv.find).filter(item=>{return item.escheque>0})
-      return result
+      let result = mv.$store.getters.comprobantes(mv.find).filter((item) => {
+        return item.escheque > 0;
+      });
+      return result;
     },
-    fechaactual: function() {
+    fechaactual: function () {
       return this.$store.state.fecha_trabajo[0].fechaactual.split("T")[0];
     },
-    cuentasDetalle: function() {
+    cuentasDetalle: function () {
       var mv = this;
       return mv.$store.getters.cuentasDetalle();
     },
-    totales: function() {
+    totales: function () {
       var mv = this;
       var debe = 0;
       var haber = 0;
@@ -794,7 +883,6 @@ export default {
       if (debe == haber && debe > 0) {
         if (
           mv.data.sucursal > 0 &&
-          mv.data.sector > 0 &&
           mv.data.descripción.length > 0 &&
           mv.data.fondo > 0
         ) {

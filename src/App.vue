@@ -52,6 +52,7 @@
 <script>
 import Router from "./router/index";
 import Store from "./store/index";
+import io from "socket.io/client-dist/socket.io"
 var mv = {
   name: "App",
   data: () => ({
@@ -146,9 +147,11 @@ var mv = {
     },
   },
   mounted: function() {
+    let mv = this;
     Store.dispatch("getData");
-    this.getLogo();
+    mv.getLogo();
     //console.log(window.location.pathname+window.location.search)
+    io(mv.$store.state.api)
   },
 };
 export default mv;

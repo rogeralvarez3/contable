@@ -136,6 +136,8 @@ var num2Letras = function num2Letras(numero, signoDecimal, moneda, recursivo) {
   }
   var strResult = result.enteros + " " + moneda + result.decimales;
   strResult = strResult.replace(/ {2}/g, " ");
+  let dup = strResult.split(moneda).length
+  if(dup>2){strResult = strResult.replace(moneda,'')}
   return strResult;
 };
 function compare(a, b) {

@@ -5,7 +5,8 @@ const con = mysql.createConnection({
   port: 3312,
   user: "root",
   password: "root@",
-  database: "genezis_prueba"
+  database: "genezis_prueba",
+  connectTimeout:5000
 });
 var exeSP = async function(data) {
   var result = new Promise(resolve => {
