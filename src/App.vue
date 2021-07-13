@@ -4,11 +4,8 @@
       <v-list-item
         v-for="(mn, i) in menu"
         :key="i"
-        @click="
-          mn.action();
-          menu_active = i;
-        "
-        :class="i == menu_active ? 'active-menu' : ''"
+        :to="mn.to"
+        :class="$route.name == mn.to ? 'active' : ''"
       >
         <v-list-item-icon>
           <v-icon v-text="mn.icon"></v-icon>
@@ -23,13 +20,30 @@
       dense
       clipped-left
       class="elevation-1"
-      color="blue-grey lighten-3"
+      color="blue-grey darken-4"
+      dark
     >
       <v-app-bar-nav-icon
         v-if="!$store.state.drawer"
         @click="$store.state.drawer = !$store.state.drawer"
       ></v-app-bar-nav-icon>
-      <v-toolbar-title>ContApp</v-toolbar-title>
+      <v-toolbar-title>Contbilidad</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-menu y offset-y>
+        <template v-slot:activator="{ on }">
+          <v-btn fab small dark v-on="on"><v-icon>mdi-cog</v-icon> </v-btn>
+        </template>
+        <v-list>
+          <v-list-item
+            v-for="mn in menu2"
+            :key="mn.text"
+            :to="mn.to"
+            :class="$route.name == mn.to ? 'active' : ''"
+          >
+            <v-list-item-title>{{ mn.text }}</v-list-item-title></v-list-item
+          >
+        </v-list>
+      </v-menu>
     </v-app-bar>
     <v-content>
       <v-fab-transition>
@@ -50,81 +64,51 @@
 </template>
 
 <script>
-import Router from "./router/index";
 import Store from "./store/index";
-import io from "socket.io/client-dist/socket.io"
+import io from "socket.io/client-dist/socket.io";
 var mv = {
   name: "App",
   data: () => ({
-    menu_active: 0,
     menu: [
-      {
-        text: "Ocultar menú",
-        icon: "mdi-chevron-left",
-        action: function() {
-          Store.state.drawer = false;
-        },
-      },
-      {
-        text: "Catálogo",
-        icon: "mdi-book",
-        action: function() {
-          Router.push("/catalogo").catch(() => {});
-        },
-      },
-      {
-        text: "Integración cartera",
-        icon: "mdi-link",
-        action: function() {
-          Router.push("/enlaces_cartera").catch(() => {});
-        },
-      },
-{
-        text: "Integración ahorro",
-        icon: "mdi-link",
-        action: function() {
-          Router.push("/enlaces_ahorro").catch(() => {});
-        },
-      },
       {
         text: "Comprobantes",
         icon: "mdi-note",
-        action: function() {
-          Router.push("/comprobantes").catch(() => {});
-        },
+        to: "comprobantes_diario",
       },
       {
         text: "Cheques",
         icon: "mdi-ticket-account",
-        action: function() {
-          Router.push("/cheques").catch(() => {});
-        },
+        to: "comprobantes_cheques",
       },
       {
         text: "Depósitos",
         icon: "mdi-receipt",
-        action: function() {
-          Router.push("/depositos").catch(() => {});
-        },
+        to: "depositos",
       },
       {
         text: "Reportes",
         icon: "mdi-chart-bar",
-        action: function() {
-          Router.push("/reportes").catch(() => {});
-        },
+        to: "reportes",
+      },
+    ],
+    menu2: [
+      { text: "Configurar inicio de operaciones", to: "inicio_de_operaciones" },
+      {
+        text: "Catálogo de cuentas",
+        to: "catalogo",
       },
       {
-        text: "Salir",
-        icon: "mdi-close",
-        action: function() {
-          console.log("Salir");
-        },
+        text: "Integración de ahorro",
+        to: "enlaces_ahorro",
+      },
+      {
+        text: "Integración de cartera",
+        to: "enlaces_cartera",
       },
     ],
   }),
   methods: {
-    getLogo: function() {
+    getLogo: function () {
       fetch(`${Store.state.api}/img/logo.jpg`)
         .then((response) => {
           return response.blob();
@@ -142,16 +126,16 @@ var mv = {
     },
   },
   computed: {
-    cargando: function() {
+    cargando: function () {
       return Store.state.cargando;
     },
   },
-  mounted: function() {
+  mounted: function () {
     let mv = this;
     Store.dispatch("getData");
     mv.getLogo();
     //console.log(window.location.pathname+window.location.search)
-    io(mv.$store.state.api)
+    io(mv.$store.state.api);
   },
 };
 export default mv;
@@ -178,6 +162,8 @@ body {
   border: 1px solid #ddd;
   border-top: none;
   padding: 4px !important;
+  padding-top: 1px;
+  padding-bottom: 2px;
 }
 .v-btn--fab.v-btn--contained {
   box-shadow: 1px 1px 4px #555;
@@ -241,5 +227,11 @@ body {
 }
 table thead tr th {
   background: none !important;
+}
+.swal2-popup {
+  font-family: "system-ui" !important;
+}
+input[type="number"] {
+  text-align: right;
 }
 </style>

@@ -9,7 +9,9 @@ const io = require("socket.io");
 
 
 app.use(history());
-app.use(express.json({ limit: '100mb' }));
+app.use(express.json({
+  limit: '100mb'
+}));
 
 app.use(cors());
 app.use(express.static(path.resolve(__dirname, "dist")));
@@ -39,7 +41,13 @@ app.post("/save", (req, res) => {
     res.send(r);
   });
 });
-
+app.post("/delete", (req, res) => {
+  var data = req.body;
+  console.log(data);
+  db.remove(data, result => {
+    res.send(result)
+  })
+})
 let httpServer = app.listen(app.get("port"), () => {
   console.info(`Server listen on port ${app.get("port")}`);
 });
@@ -51,5 +59,5 @@ let sockets = io(httpServer, {
 });
 
 sockets.on("connection", sck => {
-  console.log('cliente conectado');
+  console.log(`cliente ${sck.id} conectado`);
 })

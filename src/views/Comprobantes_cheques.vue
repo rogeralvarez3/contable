@@ -1,9 +1,12 @@
 <template>
   <v-container>
-    <v-dialog width="800" v-model="dlgFind">
+    <v-dialog width="1100" v-model="dlgFind">
       <v-card>
-        <v-card-title class="">
-          <v-text-field
+        <v-card-title>
+          <div class="pl-2">Lista de comprobantes</div>
+          <v-spacer></v-spacer>
+          <div width="200" class="mr-1">
+            <v-text-field
             hide-details
             dense
             outlined
@@ -13,7 +16,9 @@
             append-icon="mdi-magnify"
             placeholder="Buscar comprobante..."
           ></v-text-field>
-          <v-spacer></v-spacer>
+          </div>
+          
+          
 
           <v-btn small dark fab color="red" @click="dlgFind = false">
             <v-icon>mdi-close</v-icon>
@@ -27,10 +32,12 @@
                 <tr>
                   <th>id</th>
                   <th>Fecha</th>
+                  <th>Tipo fondo</th>
                   <th>Sucursal</th>
                   <th>Fondo</th>
-                  <th>Número</th>
+                  <th>Referencia</th>
                   <th>Descripción</th>
+                  <th>Monto</th>
                 </tr>
               </thead>
               <tbody>
@@ -39,14 +46,23 @@
                   :key="i"
                   @click="getComprobante(row.id)"
                 >
-                  <td>{{ row.id }}</td>
+                  <td>{{ row.id.toString().padStart(10, "0") }}</td>
                   <td>
                     {{ row.fecha.split("T")[0].split("-").reverse().join("/") }}
                   </td>
-                  <td>{{ row.sucursal ? row.sucursal.toLowerCase() : "" }}</td>
-                  <td>{{ row.fondo ? row.fondo.toLowerCase() : "" }}</td>
-                  <td>{{ row.número }}</td>
+                  <td>{{ row.tipo_fondo }}</td>
+                  <td>{{ row.sucursal ? row.sucursal.toLowerCase() : "-" }}</td>
+                  <td>{{ row.fondo ? row.fondo.toLowerCase() : "-" }}</td>
+                  <td>{{ row.referencia }}</td>
                   <td>{{ row.descripción }}</td>
+                  <td>
+                    {{
+                      new Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }).format(row.monto)
+                    }}
+                  </td>
                 </tr>
               </tbody>
             </v-simple-table>
@@ -57,25 +73,8 @@
     <v-card width="900" class="mt-2">
       <v-card-title class="">
         <v-btn fab small text disabled> <v-icon>mdi-file</v-icon> </v-btn
-        >Comprobantes de diario
+        >Comprobantes de cheques
         <v-spacer></v-spacer>
-        <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-btn
-              fab
-              small
-              dark
-              color="primary"
-              class="mr-1"
-              v-on="on"
-              @click="limpiar()"
-              :disabled="data.cerrado == 0"
-            >
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
-          </template>
-          <span>Nuevo comprobante</span>
-        </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on }">
             <v-btn
@@ -86,7 +85,7 @@
               class="mr-1"
               v-on="on"
               @click="guardarComprobante()"
-              :disabled="!totales.ok || data.cerrado > 0"
+              :disabled="!totales.ok"
             >
               <v-icon>mdi-content-save</v-icon>
             </v-btn>
@@ -103,7 +102,7 @@
               class="mr-1"
               v-on="on"
               @click="generarDetallePropagado()"
-              :disabled="!totales.ok || data.id == 0"
+              :disabled="data.id == 0"
             >
               <v-icon>mdi-printer</v-icon>
             </v-btn>
@@ -119,13 +118,13 @@
               color="warning"
               class="mr-1"
               v-on="on"
-              @click="() => {}"
-              :disabled="!totales.ok || data.cerrado > 0"
+              @click="limpiar()"
+              :disabled="JSON.stringify(data) == JSON.stringify(dataInit)"
             >
-              <v-icon>mdi-sticker-remove</v-icon>
+              <v-icon>mdi-refresh</v-icon>
             </v-btn>
           </template>
-          <span>Borrar</span>
+          <span>Limpiar</span>
         </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on }">
@@ -154,6 +153,7 @@
               dark
               class="mr-1"
               @click="dlgFind = true"
+              :disabled="$store.state.view_comprobantes_diario.length == 0"
             >
               <v-icon small>mdi-magnify</v-icon>
             </v-btn>
@@ -198,25 +198,27 @@
             class="mr-2"
             v-model="data.fondo"
             :disabled="data.cerrado > 0"
-            v-if="data.tipo_fondo>1"
+            v-if="data.tipo_fondo > 1"
           ></v-select>
           <div width="200">
-             <v-text-field
-            label="Número de comprobante:"
-            class="mr-2"
-            v-model="data.consecutivo"
-            disabled
-            
-          ></v-text-field>
+            <v-text-field
+              label="Número de comprobante:"
+              class="mr-2"
+              v-model="consecutivo"
+              disabled
+            ></v-text-field>
           </div>
           <div width="200">
-             <v-text-field
-            label="Referencia:"
-            class="mr-2"
-            v-model="data.referencia"
-            :disabled="data.cerrado > 0"
-            
-          ></v-text-field>
+            <v-select
+              label="Referencia:"
+              class="mr-2"
+              v-model="data.referencia"
+              :disabled="data.cerrado > 0"
+              :items="referencias"
+              item-text="descripción"
+              item-value="id"
+              @change="data.referencia == 0 ? (dlgAddReference = true) : null"
+            ></v-select>
           </div>
           <v-text-field
             label="Descripción:"
@@ -312,8 +314,22 @@
               >
                 <tr>
                   <th colspan="2">TOTALES:</th>
-                  <th>{{ parseFloat(totales.debe).toFixed(2) }}</th>
-                  <th>{{ parseFloat(totales.haber).toFixed(2) }}</th>
+                  <th>
+                    {{
+                      new Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }).format(totales.debe)
+                    }}
+                  </th>
+                  <th>
+                    {{
+                      new Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }).format(totales.haber)
+                    }}
+                  </th>
                 </tr>
               </tfoot>
             </v-simple-table>
@@ -348,7 +364,7 @@
               class="mr-2"
               v-model="selectedCta.concepto"
             />
-            <v-layout row>
+            <v-layout row class="pl-3 pr-3">
               <v-text-field
                 label="Debe:"
                 class="mr-2 numero"
@@ -396,6 +412,35 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog width="400" v-model="dlgAddReference">
+      <v-card>
+        <v-card-title class=""
+          >Nueva referencia <v-spacer></v-spacer
+          ><v-btn
+            small
+            fab
+            dark
+            color="red"
+            @click="
+              dlgAddReference = false;
+              data.referencia = null;
+            "
+            ><v-icon>mdi-close</v-icon></v-btn
+          ></v-card-title
+        >
+        <v-card-text>
+          <v-text-field
+            label="Descripción de la referencia"
+            v-model="newReference"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn mall color="primary" @click="saveReference()">GUARDAR</v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -416,8 +461,17 @@ export default {
         tipo_fondo: 1,
         sucursal: 0,
         fondo: 0,
-        consecutivo: null,
-        referencia:"",
+        referencia: "",
+        descripción: "",
+        cerrado: 0,
+      },
+      data2: {
+        id: 0,
+        fecha: "",
+        tipo_fondo: 1,
+        sucursal: 0,
+        fondo: 0,
+        referencia: "",
         descripción: "",
         cerrado: 0,
       },
@@ -427,8 +481,7 @@ export default {
         tipo_fondo: 1,
         sucursal: 0,
         fondo: 0,
-        consecutivo: null,
-        referencia:"",
+        referencia: "",
         descripción: "",
         cerrado: 0,
       },
@@ -443,20 +496,71 @@ export default {
         concepto: "",
       },
       cuentas: [],
+      cuentas2: [],
       detallePropagado: [],
       documento: "",
+      newReference: "",
+      dlgAddReference: false,
     };
   },
   watch: {
-    fechaactual() {
-      this.data.fecha = this.fechaactual;
+    fechaactual: {
+      deep: true,
+      handler(val) {
+        const mv = this;
+        mv.data.fecha = val;
+        mv.data2.fecha = val;
+        mv.dataInit.fecha = val;
+      },
     },
   },
   methods: {
+    saveReference() {
+      const mv = this;
+      const data = JSON.stringify({
+        tabla: "cont_referencias",
+        data: { descripción: mv.newReference },
+      });
+      fetch(`${mv.$store.state.api}/save`, {
+        method: "post",
+        body: data,
+        headers: { "content-type": "application/json" },
+      })
+        .then((res) => {
+          return res.json();
+        })
+        .then((json) => {
+          if (json.insertId) {
+            mv.$store.dispatch("getData", {
+              tabla: "cont_referencias",
+              variable: "referencias",
+            });
+            mv.dlgAddReference = false;
+            mv.data.referencia = json.insertId;
+            mv.newReference = "";
+          } else {
+            console.log(json);
+          }
+        });
+    },
     limpiar: function () {
       let mv = this;
-      mv.data = Object.assign({}, mv.dataInit);
-      mv.cuentas = [];
+      if (mv.totales.ok) {
+        mv.$swal({
+          icon: "warning",
+          title: "Advertencia!",
+          text: "Se van a limpiar los datos del formulario y no ha guardado los cambios",
+          showCancelButton: true,
+        }).then((res) => {
+          if (res.value) {
+            mv.data = Object.assign({}, mv.dataInit);
+            mv.cuentas = [];
+          }
+        });
+      } else {
+        mv.data = Object.assign({}, mv.dataInit);
+        mv.cuentas = [];
+      }
     },
     getComprobante(id) {
       var mv = this;
@@ -464,7 +568,7 @@ export default {
         method: "post",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          tabla: "contcomprobantes",
+          tabla: "cont_comprobantes_diario",
           campos: "*",
           condición: "id=" + id,
         }),
@@ -480,11 +584,12 @@ export default {
             }
             r[0].fecha = r[0].fecha.substr(0, 10);
             mv.data = r[0];
+            mv.data2 = Object.assign({}, mv.data);
             fetch(mv.$store.state.api + "/get", {
               method: "post",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({
-                tabla: "view_suma_detallecomprobante",
+                tabla: "cont_detallecomprobantes_diario",
                 campos: "*",
                 condición: "id_comprobante=" + r[0].id,
               }),
@@ -494,6 +599,14 @@ export default {
               })
               .then((r2) => {
                 mv.cuentas = r2;
+                mv.cuentas.forEach((c) => {
+                  let idx = mv.cuentasDetalle.findIndex((item) => {
+                    return item.id == c.id_cuenta;
+                  });
+                  c.cuenta = mv.cuentasDetalle[idx].cuenta;
+                  c.descripción = mv.cuentasDetalle[idx].descripción;
+                });
+                mv.cuentas2 = Object.assign([], mv.cuentas);
               });
           } else {
             console.log(r);
@@ -515,10 +628,10 @@ export default {
       });
       mv.data.fecha = mv.fechaactual;
       var data = {
-        tabla: "contcomprobantes",
+        tabla: "cont_comprobantes_diario",
         data: mv.data,
         children: children,
-        childTable: "contdetallecomprobantes",
+        childTable: "cont_detallecomprobantes_diario",
         childIdKey: "id_comprobante",
       };
       fetch(mv.$store.state.api + "/save", {
@@ -566,32 +679,7 @@ export default {
     agregarCuenta() {
       let mv = this;
       let myObj = Object.assign({}, mv.selectedCta);
-      /*let idx = mv.cuentas.findIndex((cta) => {
-        return cta.id_cuenta == mv.selectedCta.id_cuenta;
-      });
-      if (idx >= 0) {
-        mv.$swal
-          .fire({
-            icon: "question",
-            title: "Cuenta encontrada",
-            text:
-              "Se ha encontrado esta misma cuenta en el detalle del comprobante.\n¿Desea sumarle la cantidad?",
-            //showConfirmButton:true,
-            showCancelButton: true,
-          })
-          .then((res) => {
-            if (res.value) {
-              mv.cuentas[idx].debe =
-                parseFloat(mv.cuentas[idx].debe) +
-                parseFloat(mv.selectedCta.debe);
-              mv.cuentas[idx].haber =
-                parseFloat(mv.cuentas[idx].haber) +
-                parseFloat(mv.selectedCta.haber);
-            }
-            mv.clearSelectedCta();
-            mv.dlg = false;
-          });
-      } else {*/
+      
       let myCta = mv.$store.getters.dlookup({
         tabla: "catálogo",
         campo: "id",
@@ -602,7 +690,7 @@ export default {
       mv.cuentas.push(myObj);
       mv.clearSelectedCta();
       mv.dlg = false;
-      //}
+      
     },
     generarDetallePropagado: function () {
       let mv = this;
@@ -647,7 +735,7 @@ export default {
           }
         }
       });
-      result = util.ordenar(result);
+      result = util.ordenar(result, "fecha");
       result.forEach((r) => {
         totales.debe += r.nivel == 3 ? parseFloat(r.debe) : 0;
         totales.haber += r.nivel == 3 ? parseFloat(r.haber) : 0;
@@ -674,9 +762,9 @@ export default {
           },
         ],
       ];
-      mv.generarPdf(result,tfoot);
+      mv.generarPdf(result, tfoot);
     },
-    generarPdf: function (cuentas,tfoot) {
+    generarPdf: function (cuentas, tfoot) {
       let mv = this;
       let doc = new jsPDF({
         orientation: "portrait",
@@ -697,7 +785,7 @@ export default {
       doc.setFontSize(14);
       doc.text("COMPROBANTE DE DIARIO", 4, 3.7);
       //--------------------CONTENIDO--------------------------------//
-      let linea = 4;
+      let linea = 10;
       doc.setLineWidth(0.01);
       doc.rect(12.7, 1, 7.4, 2.9);
       doc.setFontSize(8);
@@ -734,7 +822,16 @@ export default {
       );
       doc.setFontSize(10);
 
-      let thead = [["CUENTA", "DESCRIPCIÓN", "", {content:"PARCIAL",styles:{halign:"right"}}, {content:"DEBE",styles:{halign:"right"}}, {content:"HABER",styles:{halign:"right"}}]];
+      let thead = [
+        [
+          "CUENTA",
+          "DESCRIPCIÓN",
+          "",
+          { content: "PARCIAL", styles: { halign: "right" } },
+          { content: "DEBE", styles: { halign: "right" } },
+          { content: "HABER", styles: { halign: "right" } },
+        ],
+      ];
       let tbody = [];
 
       cuentas.forEach((cta) => {
@@ -758,11 +855,11 @@ export default {
       doc.autoTable({
         head: thead,
         body: tbody,
-        foot:tfoot,
+        foot: tfoot,
         startY: linea,
         startX: 1,
         theme: "plain",
-        styles: { fontSize: 9},
+        styles: { fontSize: 9 },
         columnStyles: {
           3: { halign: "right" },
           4: { halign: "right" },
@@ -793,7 +890,7 @@ export default {
               lineWidth + data.row.cells[0].x,
               data.row.cells[0].y
             );
-             data.doc.line(
+            data.doc.line(
               data.row.cells[0].x,
               data.row.cells[0].y + data.row.cells[0].height,
               lineWidth + data.row.cells[0].x,
@@ -828,20 +925,44 @@ export default {
     },
   },
   computed: {
+    referencias: function () {
+      const mv = this;
+      let refs = mv.$store.state.referencias;
+      refs.unshift({ id: 0, descripción: "Agregar nueva referencia" });
+      return refs;
+    },
     comprobantes: function () {
       let mv = this;
-      let result = mv.$store.getters.comprobantes(mv.find).filter((item) => {
-        return item.escheque == 0;
-      });
+      let result = mv.$store.getters.comprobantes_diario(mv.find);
+      return result;
+    },
+    consecutivo: function () {
+      const mv = this;
+      let result = "0000000001";
+      if (mv.$store.state.comprobantes_diario.length > 0) {
+        const max = mv.$store.state.comprobantes_diario.reduce(
+          (prev, current) => {
+            return prev.id > current.id ? prev : current;
+          }
+        ).id;
+        result = (max + 1).toString().padStart(10, "0");
+      }
+      if (mv.data.id > 0) {
+        result = mv.data.id.toString().padStart(10, "0");
+      }
+      //console.log(result)
       return result;
     },
     fechaactual: function () {
-      return this.$store.state.fecha_trabajo[0].fechaactual.split("T")[0];
+      const fecha =
+        this.$store.state.fecha_trabajo[0].fechaactual.split("T")[0];
+      return fecha;
     },
     cuentasDetalle: function () {
       var mv = this;
       return mv.$store.getters.cuentasDetalle();
     },
+
     totales: function () {
       var mv = this;
       var debe = 0;
@@ -850,11 +971,13 @@ export default {
         debe += cta.debe ? parseFloat(cta.debe) : 0.0;
         haber += cta.haber ? parseFloat(cta.haber) : 0.0;
       });
-      if (debe == haber && debe > 0) {
+      if (debe == haber && mv.cuentas.length > 1) {
         if (
-          mv.data.sucursal > 0 &&
+          (mv.data.sucursal > 0 || mv.data.fondo > 0) &&
           mv.data.descripción.length > 0 &&
-          mv.data.fondo > 0
+          mv.data.referencia > 0 &&
+          JSON.stringify(mv.data) + JSON.stringify(mv.cuentas) !=
+            JSON.stringify(mv.data2) + JSON.stringify(mv.cuentas2)
         ) {
           return { debe: debe, haber: haber, ok: true };
         } else {

@@ -35,11 +35,14 @@
                 <v-tooltip top>
                   <template v-slot:activator="{ on }">
                     <span v-on="on">{{
-                      value2text(
-                        "id",
-                        showLink(pago.value, 0).text,
-                        "catálogo"
-                      ).cuenta.replace(/-/g,'')
+                      value2text("id", showLink(pago.value, 0).text, "catálogo")
+                        .cuenta
+                        ? value2text(
+                            "id",
+                            showLink(pago.value, 0).text,
+                            "catálogo"
+                          ).cuenta.replace(/-/g, "")
+                        : ""
                     }}</span>
                   </template>
                   <span>{{
@@ -60,11 +63,14 @@
                 <v-tooltip top>
                   <template v-slot:activator="{ on }">
                     <span v-on="on">{{
-                      value2text(
-                        "id",
-                        showLink(pago.value, 1).text,
-                        "catálogo"
-                      ).cuenta.replace(/-/g,'')
+                      value2text("id", showLink(pago.value, 1).text, "catálogo")
+                        .cuenta
+                        ? value2text(
+                            "id",
+                            showLink(pago.value, 1).text,
+                            "catálogo"
+                          ).cuenta.replace(/-/g, "")
+                        : ""
                     }}</span>
                   </template>
                   <span>{{
@@ -142,7 +148,7 @@ export default {
     };
   },
   methods: {
-    save: function() {
+    save: function () {
       var mv = this;
       mv.$store.commit("setCargando", true);
       var data = {
@@ -178,7 +184,7 @@ export default {
           mv.dlg = false;
         });
     },
-    showLink: function(idPago, mov) {
+    showLink: function (idPago, mov) {
       var mv = this;
       var links = mv.$store.state.enlaces;
       var result = links.filter((l) => {
@@ -200,7 +206,7 @@ export default {
         return { id: 0, text: "" };
       }
     },
-    value2text: function(keyBuscada, valor, variable) {
+    value2text: function (keyBuscada, valor, variable) {
       var mv = this;
       var result = mv.$store.state[variable].filter((f) => {
         return f[keyBuscada] === valor;

@@ -1,6 +1,4 @@
-
 /* eslint-disable no-debugger */
-
 var num2Letras = function num2Letras(numero, signoDecimal, moneda, recursivo) {
   if (numero.length === 0) {
     return "";
@@ -18,7 +16,10 @@ var num2Letras = function num2Letras(numero, signoDecimal, moneda, recursivo) {
     signoDecimal = ".";
   }
 
-  var result = { enteros: "", decimales: "" };
+  var result = {
+    enteros: "",
+    decimales: ""
+  };
   var unidades = [
     "uno",
     "dos",
@@ -136,31 +137,106 @@ var num2Letras = function num2Letras(numero, signoDecimal, moneda, recursivo) {
   }
   var strResult = result.enteros + " " + moneda + result.decimales;
   strResult = strResult.replace(/ {2}/g, " ");
-  let dup = strResult.split(moneda).length
-  if(dup>2){strResult = strResult.replace(moneda,'')}
   return strResult;
 };
-function compare(a, b) {
-  // Use toUpperCase() to ignore character casing
-  const item1 = a.cuenta.toUpperCase();
-  const item2 = b.cuenta.toUpperCase();
-
-  let comparison = 0;
-  if (item1 > item2) {
-    comparison = 1;
-  } else if (item1 < item2) {
-    comparison = -1;
+//función que convierte un catálogo plano de una db en un objeto jerárquico JSON para ser mostrado en un treeview
+function catálogo(lista) {
+  var result = [];
+  if (lista.length === 0) {
+    return [];
   }
-  let dirección = 2;
-  if (dirección == 1) {
-    return comparison;
-  } else {
-    return comparison;
-  }
+  result = lista.filter((item) => {
+    var m = item.cuenta.split("-");
+    m.shift();
+    var suma = 0;
+    m.forEach((n) => {
+      suma += parseInt(n);
+    });
+    if (suma === 0) {
+      return true;
+    }
+  });
+  result.forEach((item) => {
+    item.fulltext = item.cuenta + " " + item.cuenta.replace(/-/g, "") + item.descripción;
+    var subcuentas = getChilds(item.cuenta, lista);
+    if (subcuentas.length > 0) {
+      item.subcuentas = subcuentas
+    }
+  });
+  return result;
 }
-const ordenarPorCuenta = function(matriz) {
-  return matriz.sort(compare);
+
+function getChilds(cuenta, lista) {
+  var result = [];
+  var m = cuenta.split("-");
+  var base = "";
+  m.forEach((item) => {
+    if (parseInt(item) > 0) {
+      base += item.toString() + "-";
+    }
+  });
+  result = lista.filter((item) => {
+    var sobra = item.cuenta.replace(base, "")
+    sobra = sobra.split("-")
+    var found = false
+    sobra.shift()
+    sobra.forEach(el => {
+      if (parseInt(el) > 0) {
+        found = true
+      }
+    })
+    return item.cuenta.substr(0, base.length) == base && !found && item.cuenta != cuenta;
+  });
+  if (result.length > 0) {
+    result.forEach((item) => {
+      var subcuentas = getChilds(item.cuenta, lista);
+      if (subcuentas.length > 0) {
+        item.subcuentas = subcuentas
+      }
+      item.fulltext = item.cuenta + " " + item.cuenta.replace(/-/g, "") + item.descripción.toLowerCase();
+    });
+  }
+  return result;
+}
+let identificarCuenta = (cuenta) => {
+  let tiposCuenta = [1, 1, 1, 2, 2, 2]
+  let natCuenta = [1, 2, 2, 1, 2, 1]
+  let result = {
+    nivel: 0
+  }
+  //identificar el nivel
+  let m = cuenta.split('-');
+  m.every(item => {
+    if (parseInt(item) > 0) {
+      result.nivel += 1;
+      return true;
+    } else {
+      return false;
+    }
+  })
+
+  //Identificar el tipo
+  result.tipo = tiposCuenta[m[0] - 1];
+  result.naturaleza = natCuenta[m[0] - 1]
+
+  return result;
+}
+let ordenar = (data, key) => {
+  let result = data.sort((a, b) => {
+    if (a[key] > b[key]) {
+      return 1;
+    }
+    if (a[key] < b[key]) {
+      return -1;
+    }
+    return 0;
+  })
+  return result;
+}
+
+module.exports = {
+  num2Letras: num2Letras,
+  catálogo: catálogo,
+  identificarCuenta: identificarCuenta,
+  ordenar: ordenar
 };
-
-
-module.exports = { num2Letras: num2Letras, ordenar: ordenarPorCuenta };

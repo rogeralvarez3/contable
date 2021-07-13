@@ -1,12 +1,13 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Catálogo from "../views/Catalogo.vue";
-import Comprobantes from "../views/Comprobantes.vue";
+import Catálogo from "../views/Catálogo.vue";
+import ComprobantesDiario from "../views/Comprobantes_diario.vue";
 import enlaces_cartera from "../views/enlaces_cartera.vue";
 import enlaces_ahorro from "../views/enlaces_ahorro.vue";
-import Cheques from "../views/Cheques.vue"
+import ComprobantesCheques from "../views/Comprobantes_cheques.vue"
 import Depositos from "../views/Depositos.vue"
 import Reportes from "../views/Reportes.vue"
+import InicioDeOperaciones from "../views/InicioDeOperaciones.vue"
 
 Vue.use(VueRouter);
 
@@ -17,14 +18,14 @@ const routes = [
     component: Catálogo,
   },
   {
-    path: "/comprobantes",
-    name: "comprobantes",
-    component: Comprobantes,
+    path: "/comprobantes_diario",
+    name: "comprobantes_diario",
+    component: ComprobantesDiario,
   },
   {
-    path: "/cheques",
-    name: "cheques",
-    component: Cheques,
+    path: "/comprobantes_cheques",
+    name: "comprobantes_cheques",
+    component: ComprobantesCheques,
   },
   {
     path: "/depositos",
@@ -45,6 +46,11 @@ const routes = [
     path: "/enlaces_ahorro",
     name: "enlaces_ahorro",
     component: enlaces_ahorro,
+  },
+  {
+    path: "/inicio_de_operaciones",
+    name: "inicio_de_operaciones",
+    component: InicioDeOperaciones,
   },
   {
     path: "/about",
